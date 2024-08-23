@@ -2,11 +2,11 @@ import { twitterClient } from './twitterClient'
 import type { FeedItem } from './fetchArticles'
 
 function formatTweet(article: FeedItem): string {
-  const title = article.title || 'Interesting Read'
-  const source = new URL(article.link).hostname.replace('www.', '') // Extracts the domain as the source
-  const link = article.link // Optionally, you can shorten the URL using a URL shortener service
+  const title = article.title || 'Discover this insight'
+  const source = new URL(article.link).hostname.replace('www.', '') // Extract the domain as the source
+  const link = article.link // Optionally, you can shorten the URL
 
-  return `${title}\n\nSource: ${source}\n\n${link}`
+  return `${title}\n\nSource: ${source}\n\nRead more: ${link}\n\n#Psychedelics #Microdosing #Wellness`
 }
 
 export async function tweetArticle(article: FeedItem) {
