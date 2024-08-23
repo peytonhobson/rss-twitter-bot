@@ -1,5 +1,5 @@
 import { config } from 'dotenv'
-import { r, run, runSafe } from '@crossingminds/utils'
+import { run } from '@crossingminds/utils'
 import { fetchArticles } from './fetchArticles'
 import { rssFeeds } from './rssFeeds'
 import { connectDB } from './connectDB'
