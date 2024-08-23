@@ -13,9 +13,9 @@ export async function fetchArticles(feedUrl: string) {
 
     /* Filter out articles that are older than three days */
     return feed.items.filter(item => {
-      const isoDate = new Date(item.isoDate).getTime()
+      const pubDate = new Date(item.pubDate).getTime()
 
-      return isoDate > Date.now() - THREE_DAYS_AGO
+      return pubDate > Date.now() - THREE_DAYS_AGO
     })
   } catch (error) {
     console.error('Error parsing feed:', error)

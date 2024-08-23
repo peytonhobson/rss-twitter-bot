@@ -19,9 +19,14 @@ export async function getOldestUnpostedArticle(db: Db, articles: FeedItem[]) {
     (a, b) => new Date(a.isoDate).getTime() - new Date(b.isoDate).getTime()
   )
 
-  const oldestUnpostedArticle = filteredArticles.find(article =>
-    isArticlePosted(db, article.link)
-  )
+  let oldestUnpostedArticle = undefined
+
+  for (const article of filteredArticles) {
+    if (!(await isArticlePosted(db, article.link))) {
+      oldestUnpostedArticle = article
+      break
+    }
+  }
 
   return oldestUnpostedArticle
 }
