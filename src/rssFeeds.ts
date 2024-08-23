@@ -1,3 +1,4 @@
+// TODO: Don't include in repo
 export const rssFeeds = [
   'https://psychedelicstoday.com/feed/',
   'https://maps.org/feed/',

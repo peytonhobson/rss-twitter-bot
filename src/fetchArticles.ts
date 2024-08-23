@@ -1,19 +1,24 @@
+import { daysToMilliseconds } from '@crossingminds/utils'
 import RSSParser from 'rss-parser'
 
-export interface FeedItem {
-  title: string
-  link: string
-  pubDate: string
-}
+const THREE_DAYS_AGO = daysToMilliseconds(3)
+
+export type FeedItem = Awaited<ReturnType<typeof fetchArticles>>[number]
 
 const rssParser = new RSSParser()
 
 export async function fetchArticles(feedUrl: string) {
-  const feed = await rssParser.parseURL(feedUrl)
+  try {
+    const feed = await rssParser.parseURL(feedUrl)
 
-  return feed.items.map(item => ({
-    title: item.title,
-    link: item.link,
-    pubDate: item.pubDate
-  }))
+    /* Filter out articles that are older than three days */
+    return feed.items.filter(item => {
+      const isoDate = new Date(item.isoDate).getTime()
+
+      return isoDate > Date.now() - THREE_DAYS_AGO
+    })
+  } catch (error) {
+    console.error('Error parsing feed:', error)
+    process.exit(1)
+  }
 }
