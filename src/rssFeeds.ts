@@ -1,14 +1,53 @@
+export type RSSFeed = {
+  feedLink: string
+  twitterHandle: string | undefined
+}
+
 // TODO: Don't include in repo
 export const rssFeeds = [
-  'https://psychedelicstoday.com/feed/',
-  'https://maps.org/feed/',
-  'https://www.sciencedaily.com/rss/mind_brain/psychedelic_drugs.xml',
-  'https://psychedelicreview.com/feed/',
-  'https://hopkinspsychedelic.org/index?format=rss',
-  'https://doubleblindmag.com/feed/',
-  'https://thethirdwave.co/feed/',
-  'https://www.lucid.news/feed/',
-  'https://microdosinginstitute.com/feed/',
-  'https://chacruna.net/feed/',
-  'https://www.psymposia.com/feed/'
-] as const
+  {
+    feedLink: 'https://psychedelicstoday.com/feed/',
+    twitterHandle: 'PsydelicsToday'
+  },
+  {
+    feedLink: 'https://maps.org/feed/',
+    twitterHandle: 'MAPS'
+  },
+  {
+    feedLink:
+      'https://www.sciencedaily.com/rss/mind_brain/psychedelic_drugs.xml',
+    twitterHandle: 'ScienceDaily'
+  },
+  {
+    feedLink: 'https://psychedelicreview.com/feed/',
+    twitterHandle: 'psyscireview'
+  },
+  {
+    feedLink: 'https://hopkinspsychedelic.org/index?format=rss',
+    twitterHandle: 'JHPsychedelics'
+  },
+  {
+    feedLink: 'https://doubleblindmag.com/feed/',
+    twitterHandle: 'doubleblindmag'
+  },
+  {
+    feedLink: 'https://thethirdwave.co/feed/',
+    twitterHandle: 'thirdwaveishere'
+  },
+  {
+    feedLink: 'https://www.lucid.news/feed/',
+    twitterHandle: 'lucidnewssite'
+  },
+  {
+    feedLink: 'https://microdosinginstitute.com/feed/',
+    twitterHandle: undefined
+  },
+  {
+    feedLink: 'https://chacruna.net/feed/',
+    twitterHandle: 'Chacruna_Inst'
+  },
+  {
+    feedLink: 'https://www.psymposia.com/feed/',
+    twitterHandle: 'psymposia'
+  }
+] as const satisfies RSSFeed[]

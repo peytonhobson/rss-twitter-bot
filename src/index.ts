@@ -13,8 +13,8 @@ run(async () => {
 
   const articles = (
     await Promise.all(
-      rssFeeds.map(async feedUrl => {
-        return await fetchArticles(feedUrl)
+      rssFeeds.map(async rssFeed => {
+        return await fetchArticles(rssFeed)
       })
     )
   ).flat()
