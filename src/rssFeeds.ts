@@ -49,5 +49,9 @@ export const rssFeeds = [
   {
     feedLink: 'https://www.psymposia.com/feed/',
     twitterHandle: 'psymposia'
+  },
+  {
+    feedLink: 'https://www.journalofpsychedelicpsychiatry.org/blog-feed.xml',
+    twitterHandle: 'psychedelic_org'
   }
 ] as const satisfies RSSFeed[]
