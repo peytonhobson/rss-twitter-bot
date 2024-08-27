@@ -1,6 +1,9 @@
 import axios from 'axios'
 
 export async function shortenUrl(longUrl: string): Promise<string> {
+  console.log(longUrl)
+
+  process.exit(1)
   const bitlyToken = process.env.BITLY_API_KEY // Store your Bitly API key in .env
   const bitlyApiUrl = 'https://api-ssl.bitly.com/v4/shorten'
 
