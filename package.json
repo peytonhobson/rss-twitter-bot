@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "@crossingminds/utils": "^0.5.0",
+    "axios": "^1.7.5",
     "dotenv": "^16.4.5",
     "mongodb": "^6.8.0",
     "nstall": "^0.2.0",
