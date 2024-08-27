@@ -1,6 +1,5 @@
 import { OpenAI } from 'openai'
 import { twitterClient } from './twitterClient'
-import { shortenUrl } from './shortenUrl'
 import type { FeedItem } from './fetchArticles'
 
 async function getPrompt(article: FeedItem) {
@@ -27,7 +26,6 @@ const openaiClient = new OpenAI({
 })
 
 export async function tweetArticle(article: FeedItem) {
-  const shortenedLink = await shortenUrl(article.link)
   const content = await getPrompt(article)
 
   const response = await openaiClient.chat.completions.create({
@@ -40,7 +38,7 @@ export async function tweetArticle(article: FeedItem) {
     : new URL(article.link).hostname.replace('www.', '')
 
   // Define static content
-  const staticContent = `\n\nSource: ${handleOrSource}\n\nRead more: ${shortenedLink}`
+  const staticContent = `\n\nSource: ${handleOrSource}\n\nRead more: ${article.link}`
 
   let dynamicContent = response.choices[0]?.message?.content?.trim() || ''
   let tweet = `${dynamicContent}${staticContent}`
