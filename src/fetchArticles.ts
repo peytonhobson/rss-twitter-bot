@@ -2,7 +2,7 @@ import { daysToMilliseconds } from '@crossingminds/utils'
 import RSSParser from 'rss-parser'
 import type { RSSFeed } from './rssFeeds'
 
-const THREE_DAYS_AGO = daysToMilliseconds(3)
+const ONE_DAY_AGO = daysToMilliseconds(1)
 
 export type FeedItem = Awaited<ReturnType<typeof fetchArticles>>[number]
 
@@ -12,12 +12,12 @@ export async function fetchArticles(rssFeed: RSSFeed) {
   try {
     const feed = await rssParser.parseURL(rssFeed.feedLink)
 
-    /* Filter out articles that are older than three days */
+    /* Filter out articles that are older than a day */
     return feed.items
       .filter(item => {
         const pubDate = new Date(item.pubDate).getTime()
 
-        return pubDate > Date.now() - THREE_DAYS_AGO
+        return pubDate > Date.now() - ONE_DAY_AGO
       })
       .map(item => ({
         ...item,
