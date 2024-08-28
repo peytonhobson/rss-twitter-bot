@@ -57,9 +57,5 @@ export const rssFeeds = [
   {
     feedLink: 'https://psychedelicvantage.com/feed/',
     twitterHandle: 'PsychedVantage'
-  },
-  {
-    feedLink: 'https://psychedelicmedicineassociation.org/feed/',
-    twitterHandle: 'Psychedelic_Med'
   }
 ] as const satisfies RSSFeed[]
