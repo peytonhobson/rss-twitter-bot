@@ -53,5 +53,13 @@ export const rssFeeds = [
   {
     feedLink: 'https://www.journalofpsychedelicpsychiatry.org/blog-feed.xml',
     twitterHandle: 'psychedelic_org'
+  },
+  {
+    feedLink: 'https://psychedelicvantage.com/feed/',
+    twitterHandle: 'PsychedVantage'
+  },
+  {
+    feedLink: 'https://psychedelicmedicineassociation.org/feed/',
+    twitterHandle: 'Psychedelic_Med'
   }
 ] as const satisfies RSSFeed[]
