@@ -69,5 +69,9 @@ export const rssFeeds = [
   {
     feedLink: 'https://therapsil.ca/feed/',
     twitterHandle: 'TheraPsil'
+  },
+  {
+    feedLink: 'https://psychedelicpress.substack.com/feed',
+    twitterHandle: 'psypre'
   }
 ] as const satisfies RSSFeed[]
