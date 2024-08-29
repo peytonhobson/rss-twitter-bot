@@ -25,6 +25,6 @@ export async function fetchArticles(rssFeed: RSSFeed) {
       }))
   } catch (error) {
     console.error('Error parsing feed:', error, rssFeed)
-    process.exit(1)
+    return []
   }
 }
