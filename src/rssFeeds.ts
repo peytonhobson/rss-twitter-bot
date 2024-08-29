@@ -61,5 +61,13 @@ export const rssFeeds = [
   {
     feedLink: 'https://open-foundation.org/feed/',
     twitterHandle: 'OPEN_fndn'
+  },
+  {
+    feedLink: 'https://intercollegiatepsychedelics.net/feed/',
+    twitterHandle: 'ipnpsychedelics'
+  },
+  {
+    feedLink: 'https://therapsil.ca/feed/',
+    twitterHandle: 'TheraPsil'
   }
 ] as const satisfies RSSFeed[]
