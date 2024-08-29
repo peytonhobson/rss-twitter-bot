@@ -24,7 +24,7 @@ export async function fetchArticles(rssFeed: RSSFeed) {
         twitterHandle: rssFeed.twitterHandle
       }))
   } catch (error) {
-    console.error('Error parsing feed:', error)
+    console.error('Error parsing feed:', error, rssFeed)
     process.exit(1)
   }
 }
