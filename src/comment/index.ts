@@ -5,6 +5,7 @@ import { connectDB } from '../connectDB'
 import { openaiClient } from '../openaiClient'
 import { twitterClient } from '../twitterClient'
 import { rssFeeds } from '../rssFeeds'
+import { validateUserTimeline } from './validateUserTimeline'
 import type { Collection } from 'mongodb'
 
 config()
@@ -28,10 +29,11 @@ async function pollTweets(commentsCollection: Collection) {
   twentyFourHoursAgo.setDate(twentyFourHoursAgo.getDate() - 1)
 
   const accountsToPoll = rssFeeds
-    .map(rssFeed => rssFeed.twitterId)
+    .map(rssFeed => rssFeed?.twitterId)
     .filter(Boolean)
 
   for (const account of accountsToPoll) {
+    // TODO: Is account doesn't have twitterId, get it from API
     const { value, hasError, error } = await runSafeAsync(async () => {
       return await rettiwtFetcher.request(EResourceType.USER_TIMELINE, {
         id: account,
@@ -43,23 +45,20 @@ async function pollTweets(commentsCollection: Collection) {
 
     if (error) {
       console.log(error)
+      // TODO: Remove
+      process.exit(0)
       continue
     }
 
-    console.log(
-      value?.data?.user?.result?.timeline?.timeline?.instructions[1]?.entries
+    const validatedTimeline = validateUserTimeline(value)
+
+    const tweets = validatedTimeline.filter(
+      entry => entry.content.entryType === 'TimelineTimelineItem'
     )
-    {
-    entryId: 'tweet-1821999895458541959',
-    sortIndex: '1829302406341459948',
-    content: {
-      entryType: 'TimelineTimelineItem',
-      __typename: 'TimelineTimelineItem',
-      itemContent: [Object],
-      clientEventInfo: [Object]
-    }
-  },
-  // Filter by entryType = 'TimelineTimelineItem' and grab itemContent
+
+    console.log(tweets?.[0]?.content?.itemContent?.[0])
+
+    // Filter by entryType = 'TimelineTimelineItem' and grab itemContent
     process.exit(0)
 
     if (tweets.data && tweets.data.length > 0) {

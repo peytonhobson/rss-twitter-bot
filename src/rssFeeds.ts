@@ -1,7 +1,7 @@
 export type RSSFeed = {
   feedLink: string
   twitterHandle: string | undefined
-  twitterId: string | undefined
+  twitterId?: string | undefined
 }
 
 // TODO: Don't include in repo
@@ -69,26 +69,32 @@ export const rssFeeds = [
   },
   {
     feedLink: 'https://psychedelicvantage.com/feed/',
-    twitterHandle: 'PsychedVantage'
+    twitterHandle: 'PsychedVantage',
+    twitterId: undefined
   },
   {
     feedLink: 'https://open-foundation.org/feed/',
-    twitterHandle: 'OPEN_fndn'
+    twitterHandle: 'OPEN_fndn',
+    twitterId: undefined
   },
   {
     feedLink: 'https://intercollegiatepsychedelics.net/feed/',
-    twitterHandle: 'ipnpsychedelics'
+    twitterHandle: 'ipnpsychedelics',
+    twitterId: undefined
   },
   {
     feedLink: 'https://therapsil.ca/feed/',
-    twitterHandle: 'TheraPsil'
+    twitterHandle: 'TheraPsil',
+    twitterId: undefined
   },
   {
-    feedLink: 'https://psychedelicpress.substack.com/feed',
-    twitterHandle: 'psypre'
+    feedLink: 'https://psychedelicpress.ssubstack.com/feed',
+    twitterHandle: 'psypre',
+    twitterId: undefined
   },
   {
     feedLink: 'https://psychedelicalpha.com/feed',
-    twitterHandle: 'Psyched_Alpha'
+    twitterHandle: 'Psyched_Alpha',
+    twitterId: undefined
   }
 ] as const satisfies RSSFeed[]
