@@ -14,12 +14,7 @@ export function validateUserTimeline(value: unknown) {
                   sortIndex: r.string(sortIndex),
                   content: r.object(
                     content,
-                    ({
-                      entryType,
-                      __typename,
-                      itemContent,
-                      clientEventInfo
-                    }) => ({
+                    ({ entryType, __typename, itemContent }) => ({
                       entryType: r.string(entryType),
                       __typename: r.string(__typename),
                       itemContent: r.array(
