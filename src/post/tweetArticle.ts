@@ -12,11 +12,31 @@ async function getPrompt(article: FeedItem) {
   const chosenTone = toneOptions[Math.floor(Math.random() * toneOptions.length)]
 
   return `
-  You are a social media manager for a Twitter account focused on psychedelics. ${chosenTone} Create a unique tweet about the following article snippet, but do not include the link or source information. Avoid using too many emojis. Make sure the tweet is concise, informative, and includes a call to action for readers to learn more, as well as the article link and twitter handle if available. Also include relevant formatting, such as new lines and hashtags.
+  You are a social media manager for a Twitter account focused on psychedelics. ${chosenTone} Create a unique tweet about the following article snippet. Use the template and example provided below to structure the tweet. Ensure the article link appears right after the headline so that the associated image is previewed with the tweet. Avoid using emojis. Make sure the tweet is concise, informative, and includes a call to action for readers to learn more. Add new lines at the end of each paragraph. Add hashtags at the end of the tweet.
 
+  ### Template:
+  {headline}
+  {twitterHandle} {link}
+  {summary}
+  {call_to_action}
+
+  ### Example:
+
+  MDMA Therapy: The Future of PTSD Treatment is Here
+
+  Source: @psyedelics https://example.com/article
+
+  Groundbreaking studies show MDMA-assisted therapy can help reduce PTSD symptoms by up to 80%. Learn how this innovative approach is changing lives.
+  
+  Read more and see how this treatment could change mental health care forever! 
+  
+  #MentalHealth #Psychedelics"
+
+  ### Generate your tweet below following this format:
+  
   Article Title: "${article.title}"
   Article Link: "${article.link}"
-  Article Twitter Handle: "${article.twitterHandle}"
+  Article Twitter Handle: "${article.twitterHandle || ''}"
   Snippet: "${article.contentSnippet.slice(0, 150)}"
   `
 }

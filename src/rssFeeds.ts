@@ -69,7 +69,26 @@ export const rssFeeds = [
   },
   {
     feedLink: 'https://psychedelicvantage.com/feed/',
-    twitterHandle: 'PsychedVantage',
-    twitterId: '1461655010958315520'
+    twitterHandle: 'PsychedVantage'
+  },
+  {
+    feedLink: 'https://open-foundation.org/feed/',
+    twitterHandle: 'OPEN_fndn'
+  },
+  {
+    feedLink: 'https://intercollegiatepsychedelics.net/feed/',
+    twitterHandle: 'ipnpsychedelics'
+  },
+  {
+    feedLink: 'https://therapsil.ca/feed/',
+    twitterHandle: 'TheraPsil'
+  },
+  {
+    feedLink: 'https://psychedelicpress.substack.com/feed',
+    twitterHandle: 'psypre'
+  },
+  {
+    feedLink: 'https://psychedelicalpha.com/feed',
+    twitterHandle: 'Psyched_Alpha'
   }
 ] as const satisfies RSSFeed[]

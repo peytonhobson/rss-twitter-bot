@@ -5,6 +5,7 @@ import { connectDB } from '../connectDB'
 import { fetchArticles } from './fetchArticles'
 import { getOldestUnpostedArticle } from './getOldestUnpostedArticle'
 import { tweetArticle } from './tweetArticle'
+import { filterPsychedelicArticles } from './filterPsychedelicArticles'
 
 config()
 
@@ -19,7 +20,9 @@ run(async () => {
         return await fetchArticles(rssFeed)
       })
     )
-  ).flat()
+  )
+    .flat()
+    .filter(filterPsychedelicArticles)
 
   const oldestUnpostedArticle = await getOldestUnpostedArticle(db, articles)
 
