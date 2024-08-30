@@ -81,5 +81,13 @@ export const rssFeeds = [
   {
     feedLink: 'https://www.drugtopics.com/rss',
     twitterHandle: 'Drug_Topics'
+  },
+  {
+    feedLink: 'https://www.ecstaticintegration.org/feed',
+    twitterHandle: 'JulesEvans11'
+  },
+  {
+    feedLink: 'https://www.pharmavoice.com/feeds/news/',
+    twitterHandle: 'PharmaVoice'
   }
 ] as const satisfies RSSFeed[]
