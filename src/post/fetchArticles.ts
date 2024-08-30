@@ -1,6 +1,6 @@
 import { daysToMilliseconds } from '@crossingminds/utils'
 import RSSParser from 'rss-parser'
-import type { RSSFeed } from './rssFeeds'
+import type { RSSFeed } from '../rssFeeds'
 
 const ONE_DAY_AGO = daysToMilliseconds(1)
 
