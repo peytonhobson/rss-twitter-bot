@@ -50,7 +50,7 @@ export async function tweetArticle(article: FeedItem) {
 
   const response = await openaiClient.chat.completions.create({
     messages: [{ role: 'user', content }],
-    model: 'gpt-4o-mini'
+    model: 'gpt-4o'
   })
 
   const tweet = response.choices[0].message.content.trim()
