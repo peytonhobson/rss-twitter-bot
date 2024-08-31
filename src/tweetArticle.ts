@@ -16,21 +16,12 @@ async function getPrompt(article: FeedItem) {
 
   ### Template:
   {headline}
+
   {twitterHandle} {link}
+
   {summary}
+
   {call_to_action}
-
-  ### Example:
-
-  MDMA Therapy: The Future of PTSD Treatment is Here
-
-  Source: @psyedelics https://example.com/article
-
-  Groundbreaking studies show MDMA-assisted therapy can help reduce PTSD symptoms by up to 80%. Learn how this innovative approach is changing lives.
-  
-  Read more and see how this treatment could change mental health care forever! 
-  
-  #MentalHealth #Psychedelics"
 
   ### Generate your tweet below following this format:
   
