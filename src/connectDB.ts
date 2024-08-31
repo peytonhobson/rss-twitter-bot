@@ -17,9 +17,7 @@ const client = new MongoClient(mongoURI)
 
 export async function connectDB(dbName: string) {
   try {
-    console.log(1)
     await client.connect()
-    console.log(2)
 
     return client.db(dbName)
   } catch (error) {
