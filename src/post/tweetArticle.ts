@@ -1,5 +1,5 @@
 import { OpenAI } from 'openai'
-import { twitterClient } from './twitterClient'
+import { twitterClient } from '../twitterClient'
 import type { FeedItem } from './fetchArticles'
 
 async function getPrompt(article: FeedItem) {

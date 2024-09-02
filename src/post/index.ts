@@ -1,16 +1,18 @@
 import { config } from 'dotenv'
 import { run } from '@crossingminds/utils'
+import { rssFeeds } from '../rssFeeds'
+import { connectDB } from '../connectDB'
 import { fetchArticles } from './fetchArticles'
-import { rssFeeds } from './rssFeeds'
-import { connectDB } from './connectDB'
 import { getOldestUnpostedArticle } from './getOldestUnpostedArticle'
 import { tweetArticle } from './tweetArticle'
 import { filterPsychedelicArticles } from './filterPsychedelicArticles'
 
 config()
 
+const DB_NAME = 'postedArticles'
+
 run(async () => {
-  const db = await connectDB()
+  const db = await connectDB(DB_NAME)
 
   const articles = (
     await Promise.all(

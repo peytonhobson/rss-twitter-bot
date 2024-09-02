@@ -15,11 +15,11 @@ if (hasError) {
 
 const client = new MongoClient(mongoURI)
 
-export async function connectDB() {
+export async function connectDB(dbName: string) {
   try {
     await client.connect()
 
-    return client.db('postedArticles')
+    return client.db(dbName)
   } catch (error) {
     console.error('Error connecting to MongoDB:', error)
     process.exit(1)
