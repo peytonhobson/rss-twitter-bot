@@ -89,5 +89,13 @@ export const rssFeeds = [
   {
     feedLink: 'https://www.pharmavoice.com/feeds/news/',
     twitterHandle: 'PharmaVoice'
+  },
+  {
+    feedLink: 'https://penumbrapsychedelic.com/feed/',
+    twitterHandle: undefined
+  },
+  {
+    feedLink: 'https://anchor.fm/s/9e62bff8/podcast/rss',
+    twitterHandle: 'PsychedBrainSci'
   }
 ] as const satisfies RSSFeed[]
