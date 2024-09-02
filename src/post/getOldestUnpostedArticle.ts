@@ -49,7 +49,7 @@ export async function getOldestUnpostedArticle(db: Db, articles: FeedItem[]) {
   }
 
   for (const article of filteredArticles) {
-    if (await isArticlePosted(db, article.link)) {
+    if (!(await isArticlePosted(db, article.link))) {
       oldestUnpostedArticle = article
       break
     }
