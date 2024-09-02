@@ -1,52 +1,13 @@
-import { OpenAI } from 'openai'
 import { twitterClient } from '../twitterClient'
+import { getRegularTweet, getThreadTweet } from './prompts'
 import type { FeedItem } from './fetchArticles'
 
-async function getPrompt(article: FeedItem) {
-  const toneOptions = [
-    'Write in a friendly, engaging tone.',
-    'Write in a concise and informative tone.',
-    'Encourage readers to explore more by reading the article.'
-  ]
-
-  const chosenTone = toneOptions[Math.floor(Math.random() * toneOptions.length)]
-
-  return `
-  You are a social media manager for a Twitter account focused on psychedelics. ${chosenTone} Create a unique tweet about the following article snippet. Use the template and example provided below to structure the tweet. Ensure the article link appears right after the headline so that the associated image is previewed with the tweet. Avoid using emojis. Make sure the tweet is concise, informative, and includes a call to action for readers to learn more. Add new lines at the end of each paragraph. Add hashtags at the end of the tweet.
-
-  ### Template:
-  {headline}
-
-  From: @{twitterHandle} 
-  
-  Read More: {link}
-
-  {summary}
-
-  {call_to_action}
-
-  ### Generate your tweet below following this format:
-  
-  Article Title: "${article.title}"
-  Article Link: "${article.link}"
-  Article Twitter Handle: "${article.twitterHandle || ''}"
-  Snippet: "${article.contentSnippet.slice(0, 150)}"
-  `
-}
-
-const openaiClient = new OpenAI({
-  apiKey: process.env['OPEN_AI_KEY']
-})
-
 export async function tweetArticle(article: FeedItem) {
-  const content = await getPrompt(article)
+  const shouldCreateThread = isArticleSmallEnoughForThread(article)
 
-  const response = await openaiClient.chat.completions.create({
-    messages: [{ role: 'user', content }],
-    model: 'gpt-4o'
-  })
-
-  const tweet = response.choices[0].message.content.trim()
+  const tweet = shouldCreateThread
+    ? await getThreadTweet(article)
+    : await getRegularTweet(article)
 
   try {
     await twitterClient.v2.tweet(tweet)
@@ -55,4 +16,10 @@ export async function tweetArticle(article: FeedItem) {
     console.error('Error posting tweet:', error)
     process.exit(1)
   }
+}
+
+// TODO: If this happens too often, we should check previous tweets to see if it was also a thread
+function isArticleSmallEnoughForThread(article: FeedItem): boolean {
+  // Assuming 2,000 characters is a reasonable length for GPT-4 to generate a thread
+  return article.content.length <= 2000
 }

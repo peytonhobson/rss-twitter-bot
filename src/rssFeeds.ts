@@ -88,7 +88,7 @@ export const rssFeeds = [
     twitterId: undefined
   },
   {
-    feedLink: 'https://psychedelicpress.ssubstack.com/feed',
+    feedLink: 'https://psychedelicpress.substack.com/feed',
     twitterHandle: 'psypre',
     twitterId: undefined
   },
