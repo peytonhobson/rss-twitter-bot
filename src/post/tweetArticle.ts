@@ -17,7 +17,9 @@ async function getPrompt(article: FeedItem) {
   ### Template:
   {headline}
 
-  @{twitterHandle} {link}
+  From: @{twitterHandle} 
+  
+  Read More: {link}
 
   {summary}
 
