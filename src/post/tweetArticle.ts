@@ -5,9 +5,7 @@ import type { FeedItem } from './fetchArticles'
 export async function tweetArticle(article: FeedItem) {
   const shouldCreateThread = isArticleSmallEnoughForThread(article)
 
-  const tweet = shouldCreateThread
-    ? await getThreadTweet(article)
-    : await getRegularTweet(article)
+  const tweet = getRegularTweet(article)
 
   try {
     await twitterClient.v2.tweet(tweet)
