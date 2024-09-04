@@ -38,13 +38,6 @@ async function createTwitterThread(article: FeedItem) {
     .split(/(?=\n\d+\/\d+)/)
     .map(tweet => tweet.trim())
 
-  tweets[0] = `
-  ${tweets[0]}
-
-  Source: ${article.link}
-  ${article.twitterHandle ? `From: @${article.twitterHandle}` : ''}
-  `
-
   try {
     await twitterClient.v2.tweetThread(tweets)
   } catch (error) {
