@@ -31,12 +31,15 @@ run(async () => {
     process.exit(0)
   }
 
-  await tweetArticle(oldestUnpostedArticle)
+  const { thread } = await tweetArticle(oldestUnpostedArticle, db)
 
   try {
-    await db.collection('postedArticles').insertOne(oldestUnpostedArticle)
+    await db
+      .collection('postedArticles')
+      .insertOne({ ...oldestUnpostedArticle, thread })
   } catch (error) {
     console.error('Error inserting article:', error)
+    process.exit(1)
   }
 
   console.log('Article posted and saved to database')

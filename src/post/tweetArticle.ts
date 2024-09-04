@@ -1,15 +1,30 @@
 import { twitterClient } from '../twitterClient'
 import { openaiClient } from '../openaiClient'
 import { getRegularPrompt, getThreadPrompt } from './prompts'
+import type { Db } from 'mongodb'
 import type { FeedItem } from './fetchArticles'
 
-export async function tweetArticle(article: FeedItem) {
-  const shouldCreateThread = isArticleSmallEnoughForThread(article)
+export async function tweetArticle(article: FeedItem, db: Db) {
+  const lastTwoTweets = await db
+    .collection('postedArticles')
+    .find({})
+    .sort({ _id: -1 })
+    .limit(2)
+    .toArray()
+
+  /* If either of last two tweets were threads, we don't want to create a thread */
+  const shouldCreateThread =
+    isArticleSmallEnoughForThread(article) &&
+    lastTwoTweets.every(tweet => !tweet.thread)
 
   if (shouldCreateThread) {
     await createTwitterThread(article)
   } else {
     await createRegularTweet(article)
+  }
+
+  return {
+    thread: shouldCreateThread
   }
 }
 
@@ -46,7 +61,6 @@ async function createTwitterThread(article: FeedItem) {
   }
 }
 
-// TODO: If this happens too often, we should check previous tweets to see if it was also a thread
 function isArticleSmallEnoughForThread(article: FeedItem): boolean {
   // Assuming 2,000 characters is a reasonable length for GPT-4 to generate a thread
   return article.content.length <= 2000
