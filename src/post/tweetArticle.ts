@@ -1,5 +1,6 @@
 import { twitterClient } from '../twitterClient'
 import { openaiClient } from '../openaiClient'
+import { rettiwtClient } from '../rettiwtClient'
 import { getRegularPrompt, getThreadPrompt } from './prompts'
 import type { Db } from 'mongodb'
 import type { FeedItem } from './fetchArticles'
@@ -12,10 +13,17 @@ export async function tweetArticle(article: FeedItem, db: Db) {
     .limit(2)
     .toArray()
 
+  // const shouldCreatePoll =
+  //   Math.random() > 0.9 && lastTwoTweets.every(tweet => !tweet.poll)
+
   /* If either of last two tweets were threads, we don't want to create a thread */
   const shouldCreateThread =
     isArticleSmallEnoughForThread(article) &&
     lastTwoTweets.every(tweet => !tweet.thread)
+
+  // if (shouldCreatePoll) {
+  //   await createTwitterPoll(article)
+  // } else
 
   if (shouldCreateThread) {
     await createTwitterThread(article)
@@ -24,6 +32,7 @@ export async function tweetArticle(article: FeedItem, db: Db) {
   }
 
   return {
+    // poll: shouldCreatePoll,
     thread: shouldCreateThread
   }
 }
@@ -64,4 +73,86 @@ async function createTwitterThread(article: FeedItem) {
 function isArticleSmallEnoughForThread(article: FeedItem): boolean {
   // Assuming 2,000 characters is a reasonable length for GPT-4 to generate a thread
   return article.content.length <= 2000
+}
+
+async function generatePollQuestionAndOptions(article: FeedItem) {
+  const content = `
+  You are an expert in psychedelics and wellness. Based on the following article snippet, create a Twitter poll question and four possible options that encourage engagement and thoughtful discussion. The poll should be relevant to the main topic of the article. The output should be in the following JSON format:
+
+  {
+    "question": "string",
+    "options": ["string", "string", "string", "string"]
+  }
+
+  Ensure the poll question is under 100 characters and each option is under 25 characters.
+
+  Article Title: "${article.title}"
+  Article Snippet: "${article.contentSnippet.slice(0, 300)}"
+  `
+
+  const response = await openaiClient.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [{ role: 'user', content }],
+    temperature: 0.8,
+    functions: [
+      {
+        name: 'generate_poll',
+        description: 'Generate a poll question and four options',
+        parameters: {
+          type: 'object',
+          properties: {
+            question: {
+              type: 'string',
+              description:
+                'The poll question that is engaging and relevant to the topic',
+              maxLength: 100
+            },
+            options: {
+              type: 'array',
+              items: {
+                type: 'string',
+                maxLength: 25
+              },
+              minItems: 2,
+              maxItems: 4,
+              description:
+                'Four possible poll options that are under 25 characters each'
+            }
+          },
+          required: ['question', 'options']
+        }
+      }
+    ],
+    function_call: { name: 'generate_poll' }
+  })
+
+  const pollData = response.choices[0]?.message.function_call?.arguments
+
+  if (pollData) {
+    const { question, options } = JSON.parse(pollData)
+
+    return { question, options }
+  } else {
+    throw new Error('Failed to generate poll question and options.')
+    process.exit(1)
+  }
+}
+
+async function createTwitterPoll(article: FeedItem) {
+  try {
+    const { question, options } = await generatePollQuestionAndOptions(article)
+
+    // Ensure options are unique and within Twitter's requirements (2-4 options)
+    const uniqueOptions = Array.from(new Set(options)).slice(0, 4)
+
+    const pollTweet = await rettiwtClient.poll({
+      text: question,
+      poll: { options: uniqueOptions, duration_minutes: 1440 } // 24-hour poll
+    })
+
+    console.log(`Poll created: ${pollTweet.data.id}`)
+  } catch (error) {
+    console.error('Failed to create poll tweet:', error)
+    process.exit(1)
+  }
 }
