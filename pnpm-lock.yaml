@@ -17,6 +17,9 @@ importers:
       dotenv:
         specifier: ^16.4.5
         version: 16.4.5
+      https-proxy-agent:
+        specifier: ^7.0.5
+        version: 7.0.5
       mongodb:
         specifier: ^6.8.0
         version: 6.8.0
@@ -29,6 +32,9 @@ importers:
       rettiwt-api:
         specifier: ^3.1.1
         version: 3.1.1
+      rettiwt-auth:
+        specifier: ^2.1.0
+        version: 2.1.0
       rss-parser:
         specifier: ^3.13.0
         version: 3.13.0
@@ -1097,6 +1103,10 @@ packages:
 
   https-proxy-agent@7.0.2:
     resolution: {integrity: sha512-NmLNjm6ucYwtcUmL7JQC1ZQ57LmHP4lT15FQ8D61nak1rO6DH+fz5qNK2Ap5UN4ZapYICE3/0KodcLYSPsPbaA==}
+    engines: {node: '>= 14'}
+
+  https-proxy-agent@7.0.5:
+    resolution: {integrity: sha512-1e4Wqeblerz+tMKPIq2EMGiiWW1dIjZOksyHWSUm1rmuvw/how9hBHZ38lAGj5ID4Ik6EdkOw7NmWPy6LAwalw==}
     engines: {node: '>= 14'}
 
   humanize-ms@1.2.1:
@@ -3071,6 +3081,13 @@ snapshots:
       hermes-estree: 0.20.1
 
   https-proxy-agent@7.0.2:
+    dependencies:
+      agent-base: 7.1.1
+      debug: 4.3.6
+    transitivePeerDependencies:
+      - supports-color
+
+  https-proxy-agent@7.0.5:
     dependencies:
       agent-base: 7.1.1
       debug: 4.3.6

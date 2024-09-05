@@ -1,7 +1,7 @@
 import { twitterClient } from '../twitterClient'
 import { openaiClient } from '../openaiClient'
-import { rettiwtClient } from '../rettiwtClient'
 import { getRegularPrompt, getThreadPrompt } from './prompts'
+import { createPoll } from './createPoll'
 import type { Db } from 'mongodb'
 import type { FeedItem } from './fetchArticles'
 
@@ -13,19 +13,17 @@ export async function tweetArticle(article: FeedItem, db: Db) {
     .limit(2)
     .toArray()
 
-  // const shouldCreatePoll =
-  //   Math.random() > 0.9 && lastTwoTweets.every(tweet => !tweet.poll)
+  const shouldCreatePoll =
+    Math.random() > 0.9 && lastTwoTweets.every(tweet => !tweet.poll)
 
   /* If either of last two tweets were threads, we don't want to create a thread */
   const shouldCreateThread =
     isArticleSmallEnoughForThread(article) &&
     lastTwoTweets.every(tweet => !tweet.thread)
 
-  // if (shouldCreatePoll) {
-  //   await createTwitterPoll(article)
-  // } else
-
-  if (shouldCreateThread) {
+  if (shouldCreatePoll) {
+    await createTwitterPoll(article)
+  } else if (shouldCreateThread) {
     await createTwitterThread(article)
   } else {
     await createRegularTweet(article)
@@ -143,14 +141,16 @@ async function createTwitterPoll(article: FeedItem) {
     const { question, options } = await generatePollQuestionAndOptions(article)
 
     // Ensure options are unique and within Twitter's requirements (2-4 options)
-    const uniqueOptions = Array.from(new Set(options)).slice(0, 4)
+    const uniqueOptions = Array.from(new Set(options))
+      .slice(0, 4)
+      .map(option => option.toString())
 
-    const pollTweet = await rettiwtClient.poll({
-      text: question,
-      poll: { options: uniqueOptions, duration_minutes: 1440 } // 24-hour poll
+    await createPoll({
+      question,
+      options: uniqueOptions
     })
 
-    console.log(`Poll created: ${pollTweet.data.id}`)
+    console.log(`Poll created: ${question}`)
   } catch (error) {
     console.error('Failed to create poll tweet:', error)
     process.exit(1)
