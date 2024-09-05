@@ -16,7 +16,9 @@ export function filterPsychedelicArticles(article: FeedItem) {
     'entheogens',
     'hallucinogens',
     'effects',
-    'maps'
+    'maps',
+    'shroom',
+    'trip'
   ]
 
   return psychedelicKeywords.some(keyword =>

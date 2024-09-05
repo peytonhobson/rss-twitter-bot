@@ -13,8 +13,6 @@ export async function createPoll({
   question: string
   options: string[]
 }) {
-  console.log(getPollCardDataConfig(options))
-
   const cardData = await customFetcherService.request(
     'poll',
     getPollCardDataConfig(options)

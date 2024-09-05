@@ -36,7 +36,14 @@ export async function tweetArticle(article: FeedItem, db: Db) {
 }
 
 async function createRegularTweet(article: FeedItem) {
-  const tweet = await getRegularPrompt(article)
+  const content = await getRegularPrompt(article)
+
+  const response = await openaiClient.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [{ role: 'user', content }]
+  })
+
+  const tweet = response.choices[0]?.message?.content?.trim() || ''
 
   try {
     await twitterClient.v2.tweet(tweet)
