@@ -3,7 +3,7 @@ import { CustomFetcherService } from './CustomFetcherService'
 import type { AxiosRequestConfig } from 'axios'
 
 const customFetcherService = new CustomFetcherService({
-  apiKey: process.env.RETTIWT_API_KEY_TEST
+  apiKey: process.env.RETTIWT_API_KEY
 })
 
 export async function createPoll({
