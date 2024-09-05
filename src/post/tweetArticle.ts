@@ -92,6 +92,8 @@ async function generatePollQuestionAndOptions(article: FeedItem) {
   Ensure the poll question is under 100 characters and each option is under 25 characters.
 
   Article Title: "${article.title}"
+  Article Link: "${article.link}"
+  Article Twitter Handle: "${article.twitterHandle}"
   Article Snippet: "${article.contentSnippet.slice(0, 300)}"
   `
 
@@ -102,14 +104,14 @@ async function generatePollQuestionAndOptions(article: FeedItem) {
     functions: [
       {
         name: 'generate_poll',
-        description: 'Generate a poll question and four options',
+        description: 'Generate a poll question, content, and four options',
         parameters: {
           type: 'object',
           properties: {
             question: {
               type: 'string',
               description:
-                'The poll question that is engaging and relevant to the topic',
+                'The poll question that is engaging and relevant to the topic, as well as the article title, link, and twitter handle.',
               maxLength: 100
             },
             options: {
@@ -134,6 +136,7 @@ async function generatePollQuestionAndOptions(article: FeedItem) {
   const pollData = response.choices[0]?.message.function_call?.arguments
 
   if (pollData) {
+    // TODO: validate these types
     const { question, options } = JSON.parse(pollData)
 
     return { question, options }
