@@ -8,9 +8,11 @@ const customFetcherService = new CustomFetcherService({
 
 export async function createPoll({
   question,
+  content,
   options
 }: {
   question: string
+  content: string
   options: string[]
 }) {
   const cardData = await customFetcherService.request(
@@ -22,7 +24,7 @@ export async function createPoll({
 
   await customFetcherService.request(
     'poll',
-    getPollTweetConfig({ text: question, cardUri })
+    getPollTweetConfig({ text: `${question}\n\n${content}`, cardUri })
   )
 }
 

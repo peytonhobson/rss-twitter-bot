@@ -151,9 +151,9 @@ async function generatePollQuestionAndOptions(article: FeedItem) {
 
   if (pollData) {
     // TODO: validate these types
-    const { question, options } = JSON.parse(pollData)
+    const { question, content, options } = JSON.parse(pollData)
 
-    return { question, options }
+    return { question, content, options }
   } else {
     throw new Error('Failed to generate poll question and options.')
     process.exit(1)
@@ -162,7 +162,8 @@ async function generatePollQuestionAndOptions(article: FeedItem) {
 
 async function createTwitterPoll(article: FeedItem) {
   try {
-    const { question, options } = await generatePollQuestionAndOptions(article)
+    const { question, content, options } =
+      await generatePollQuestionAndOptions(article)
 
     // Ensure options are unique and within Twitter's requirements (2-4 options)
     const uniqueOptions = Array.from(new Set(options))
@@ -171,6 +172,7 @@ async function createTwitterPoll(article: FeedItem) {
 
     await createPoll({
       question,
+      content,
       options: uniqueOptions
     })
 
