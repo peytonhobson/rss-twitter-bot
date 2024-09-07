@@ -82,7 +82,7 @@ function isArticleSmallEnoughForThread(article: FeedItem): boolean {
 
 async function generatePollQuestionAndOptions(article: FeedItem) {
   const content = `
-  You are an expert in psychedelics and wellness. Based on the following article snippet, create a Twitter poll question and four possible options that encourage engagement and thoughtful discussion. The poll should be relevant to the main topic of the article. The output should be in the following JSON format:
+  You are an expert in psychedelics and wellness. Based on the following article snippet, create a Twitter poll question, a comment about the article, and four possible options that encourage engagement and thoughtful discussion. The poll should be relevant to the main topic of the article. The output should be in the following JSON format:
 
   {
     "question": "string",
@@ -111,7 +111,21 @@ async function generatePollQuestionAndOptions(article: FeedItem) {
             question: {
               type: 'string',
               description:
-                'The poll question that is engaging and relevant to the topic, as well as the article title, link, and twitter handle.',
+                'The poll question that is engaging and relevant to the topic.',
+              maxLength: 100
+            },
+            content: {
+              type: 'string',
+              description: `A comment about the article that is engaging and relevant to the topic, as well as the article title, link, and twitter handle.
+                
+
+                ###Format###
+
+                {comment}
+
+                Read More: {link}
+                @{twitterHandle}
+                `,
               maxLength: 100
             },
             options: {
