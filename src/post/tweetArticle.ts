@@ -64,7 +64,7 @@ async function createTwitterThread(article: FeedItem) {
   const generatedContent = response.choices[0]?.message?.content?.trim() || ''
 
   const tweets = generatedContent
-    .split(/(?=\n\d+\/\d+)/)
+    .split(/(?=\n\d+\/)/)
     .map(tweet => tweet.trim())
 
   try {
@@ -151,9 +151,9 @@ async function generatePollQuestionAndOptions(article: FeedItem) {
 
   if (pollData) {
     // TODO: validate these types
-    const { question, content, options } = JSON.parse(pollData)
+    const { question, content: tweetContent, options } = JSON.parse(pollData)
 
-    return { question, content, options }
+    return { question, content: tweetContent, options }
   } else {
     throw new Error('Failed to generate poll question and options.')
     process.exit(1)
