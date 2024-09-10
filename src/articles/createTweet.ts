@@ -1,6 +1,26 @@
+import { openaiClient } from '../clients/openaiClient'
+import { twitterClient } from '../clients/twitterClient'
 import type { FeedItem } from './fetchArticles'
 
-export async function getRegularPrompt(article: FeedItem) {
+export async function createTweet(article: FeedItem) {
+  const content = await getPrompt(article)
+
+  const response = await openaiClient.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [{ role: 'user', content }]
+  })
+
+  const tweet = response.choices[0]?.message?.content?.trim() || ''
+
+  try {
+    await twitterClient.v2.tweet(tweet)
+    console.log(`Tweeted: ${tweet}`)
+  } catch (error) {
+    console.error('Error posting tweet:', error)
+  }
+}
+
+export async function getPrompt(article: FeedItem) {
   const toneOptions = [
     'Write in a friendly, engaging tone.',
     'Write in a concise and informative tone.',
@@ -30,15 +50,6 @@ export async function getRegularPrompt(article: FeedItem) {
   Article Twitter Handle: "${article.twitterHandle || ''}"
   Snippet: "${article.contentSnippet.slice(0, 150)}"
   `
-}
 
-export async function getThreadPrompt(article: FeedItem) {
-  return `
-  You are an expert in psychedelics and wellness. Break down the following article into a series of tweets (up to 5 tweets) that summarize the key points or findings of the article. Each tweet should be engaging and provide value.  Add new lines at the end of each paragraph. Don't use emojis. There should only be one question in the thread and it should be at the end of the last tweet. The question should be thought-provoking and encourage readers to think more about the article. Only include the article link and twitter handle at the end of the last tweet.
-
-  Article Title: "${article.title}"
-  Snippet: "${article.content.slice(0, 2000)}"
-  Article Link: "${article.link}"
-  Article Twitter Handle: "${article.twitterHandle || ''}"
-  `
+  // TODO: Don't include the twitter handle if it's not provided
 }

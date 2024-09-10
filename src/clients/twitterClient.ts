@@ -11,10 +11,12 @@ const { value: credentials, hasError } = runSafe(() => ({
   accessSecret: r.required(r.string(process.env.TWITTER_ACCESS_SECRET))
 }))
 
+// TODO: Better error message
 if (hasError) {
   console.error('Error loading credentials:', credentials)
-  process.exit(1)
 }
 
 // Twitter API credentials
-export const twitterClient = new TwitterApi(credentials)
+export const twitterClient = credentials
+  ? new TwitterApi(credentials)
+  : undefined

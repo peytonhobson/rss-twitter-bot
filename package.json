@@ -1,6 +1,6 @@
 {
   "name": "rss-twitter-bot",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "",
   "main": "index.js",
   "type": "module",
@@ -17,7 +17,6 @@
     "dotenv": "^16.4.5",
     "https-proxy-agent": "^7.0.5",
     "mongodb": "^6.8.0",
-    "nstall": "^0.2.0",
     "openai": "^4.56.0",
     "rettiwt-api": "^3.1.1",
     "rettiwt-auth": "^2.1.0",

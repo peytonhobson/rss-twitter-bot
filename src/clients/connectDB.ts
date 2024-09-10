@@ -2,18 +2,19 @@ import { MongoClient } from 'mongodb'
 import { config } from 'dotenv'
 import { r, runSafe } from '@crossingminds/utils'
 
-config() // Load environment variables from .env
+config()
 
+// TODO: Implement own version of runSafe
 const { hasError, value: mongoURI } = runSafe(() =>
   r.required(r.string(process.env.MONGO_URI))
 )
 
+// TODO: Better error message
 if (hasError) {
   console.error('Error loading MongoDB URI:', mongoURI)
-  process.exit(1)
 }
 
-const client = new MongoClient(mongoURI)
+const client = mongoURI ? new MongoClient(mongoURI) : undefined
 
 export async function connectDB(dbName: string) {
   try {
@@ -22,6 +23,5 @@ export async function connectDB(dbName: string) {
     return client.db(dbName)
   } catch (error) {
     console.error('Error connecting to MongoDB:', error)
-    process.exit(1)
   }
 }

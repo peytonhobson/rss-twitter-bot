@@ -9,17 +9,15 @@ import type { IRettiwtConfig } from 'rettiwt-api'
 
 import type { Agent } from 'https'
 
+// NOTE: This is a workaround until the rettiwt-api package supports poll tweets
 /**
  * The base service that handles all HTTP requests.
  *
  * @public
  */
-export class CustomFetcherService {
+class CustomFetcherService {
   /** The api key to use for authenticating against Twitter API as user. */
   private readonly apiKey?: string
-
-  /** The guest key to use for authenticating against Twitter API as guest. */
-  private readonly guestKey?: string
 
   /** The URL To the proxy server to use for all others. */
   private readonly proxyUrl?: URL
@@ -38,7 +36,6 @@ export class CustomFetcherService {
    */
   public constructor(config?: IRettiwtConfig) {
     this.apiKey = config?.apiKey
-    this.guestKey = config?.guestKey
     this.userId = config?.apiKey
       ? CustomFetcherService.getUserId(config.apiKey)
       : undefined
@@ -153,10 +150,7 @@ export class CustomFetcherService {
    * })
    * ```
    */
-  public async request<T>(
-    resource: 'poll',
-    startingConfig: AxiosRequestConfig
-  ): Promise<T> {
+  public async request<T>(startingConfig: AxiosRequestConfig): Promise<T> {
     const config = await this.getRequestConfig(startingConfig)
 
     // Sending the request
@@ -169,8 +163,11 @@ export class CustomFetcherService {
       } else {
         console.log(error)
       }
-
-      process.exit(1)
     }
   }
 }
+
+// TODO: Validation
+export const customFetcherService = new CustomFetcherService({
+  apiKey: process.env.RETTIWT_API_KEY
+})
