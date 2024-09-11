@@ -1,12 +1,13 @@
 import { createPoll } from './createPoll'
 import { createThread } from './createThread'
 import { createTweet } from './createTweet'
+import { POSTED_ARTICLE_COLLECTION_NAME } from './articleCollection'
 import type { Db } from 'mongodb'
 import type { FeedItem } from './fetchArticles'
 
-export async function tweetArticle(article: FeedItem, db: Db) {
+export async function tweetArticle(article: FeedItem, db: Db | undefined) {
   const lastTwoTweets = await db
-    .collection('postedArticles')
+    ?.collection(POSTED_ARTICLE_COLLECTION_NAME)
     .find({})
     .sort({ _id: -1 })
     .limit(2)
@@ -15,7 +16,7 @@ export async function tweetArticle(article: FeedItem, db: Db) {
   /* Create a 10% chance of creating a poll, but don't create 
      a poll if either of the last two tweets were polls */
   const shouldCreatePoll =
-    Math.random() > 0.9 && lastTwoTweets.every(tweet => !tweet.poll)
+    Math.random() > 0.9 && (lastTwoTweets?.every(tweet => !tweet.poll) ?? true)
 
   if (shouldCreatePoll) {
     await createPoll(article)
@@ -28,7 +29,7 @@ export async function tweetArticle(article: FeedItem, db: Db) {
   /* If either of last two tweets were threads, we don't want to create a thread */
   const shouldCreateThread =
     isArticleSmallEnoughForThread(article) &&
-    lastTwoTweets.every(tweet => !tweet.thread) // If either of last two tweets were threads, we don't want to create a thread
+    (lastTwoTweets?.every(tweet => !tweet.thread) ?? true) // If either of last two tweets were threads, we don't want to create a thread
 
   if (shouldCreateThread) {
     await createThread(article)

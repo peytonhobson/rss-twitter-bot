@@ -150,7 +150,9 @@ class CustomFetcherService {
    * })
    * ```
    */
-  public async request<T>(startingConfig: AxiosRequestConfig): Promise<T> {
+  public async request<T>(
+    startingConfig: AxiosRequestConfig
+  ): Promise<T | undefined> {
     const config = await this.getRequestConfig(startingConfig)
 
     // Sending the request

@@ -1,6 +1,6 @@
-import { daysToMilliseconds } from '@crossingminds/utils'
+import { daysToMilliseconds, r } from '@crossingminds/utils'
 import RSSParser from 'rss-parser'
-import type { RSSFeed } from './postArticleTweet'
+import type { RSSFeed } from './rssFeed'
 
 const DEFAULT_EARLIEST_PUBLISH_DATE = daysToMilliseconds(1)
 
@@ -15,7 +15,9 @@ export async function fetchArticles(
   try {
     const feed = await rssParser.parseURL(rssFeed.feedLink)
 
-    return feed.items
+    const validatedFeedItems = validateFeedItems(feed.items)
+
+    return validatedFeedItems
       .filter(item => {
         const pubDate = new Date(item.pubDate).getTime()
 
@@ -24,7 +26,7 @@ export async function fetchArticles(
         return (
           pubDate >
           Date.now() -
-            (earliestPublishDate.getTime() ?? DEFAULT_EARLIEST_PUBLISH_DATE)
+            (earliestPublishDate?.getTime() ?? DEFAULT_EARLIEST_PUBLISH_DATE)
         )
       })
       .map(item => ({
@@ -35,4 +37,36 @@ export async function fetchArticles(
     console.error('Error parsing feed:', error, rssFeed)
     return []
   }
+}
+
+function validateFeedItems(items: RSSParser.Item[]) {
+  const validatedItems: NonNullable<ReturnType<typeof validateFeedItem>>[] = []
+
+  for (const item of items) {
+    try {
+      const validatedItem = validateFeedItem(item)
+
+      if (validatedItem) {
+        validatedItems.push(validatedItem)
+      }
+    } catch (error) {
+      console.error('Error validating feed item:', error, item)
+    }
+  }
+
+  return validatedItems
+}
+
+function validateFeedItem(item: RSSParser.Item) {
+  return r.object(
+    item,
+    ({ pubDate, link, content, contentSnippet, ...rest }) => ({
+      pubDate: r.required(r.string(pubDate)),
+      link: r.required(r.string(link)),
+      content: r.required(r.string(content)),
+      contentSnippet: r.required(r.string(contentSnippet)),
+      title: r.required(r.string(item.title)),
+      ...rest
+    })
+  )
 }

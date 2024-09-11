@@ -5,6 +5,7 @@ import { r, runSafe } from '@crossingminds/utils'
 config()
 
 // TODO: Implement own version of runSafe
+// TODO: make mongodb optional
 const { hasError, value: mongoURI } = runSafe(() =>
   r.required(r.string(process.env.MONGO_URI))
 )

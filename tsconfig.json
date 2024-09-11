@@ -1,8 +1,10 @@
+
 {
   "compilerOptions": {
     "module": "CommonJS",
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "strictNullChecks": true
   }
 }

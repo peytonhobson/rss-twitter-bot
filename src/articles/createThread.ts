@@ -1,11 +1,9 @@
-import { openaiClient } from '../clients/openaiClient'
-import { twitterClient } from '../clients/twitterClient'
 import type { FeedItem } from './fetchArticles'
 
 export async function createThread(article: FeedItem) {
   const content = await getPrompt(article)
 
-  const response = await openaiClient.chat.completions.create({
+  const response = await this.openaiClient.chat.completions.create({
     model: 'gpt-4o',
     messages: [{ role: 'user', content }]
   })
@@ -17,7 +15,7 @@ export async function createThread(article: FeedItem) {
     .map(tweet => tweet.trim())
 
   try {
-    await twitterClient.v2.tweetThread(tweets)
+    await this.twitterClient.v2.tweetThread(tweets)
   } catch (error) {
     console.error('Error posting thread:', error)
   }

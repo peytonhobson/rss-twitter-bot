@@ -1,10 +1,11 @@
+import { POSTED_ARTICLE_COLLECTION_NAME } from './articleCollection'
 import type { Db } from 'mongodb'
 import type { FeedItem } from './fetchArticles'
 
 async function isArticlePosted(db: Db, link: string): Promise<boolean> {
   try {
     const existingArticle = await db
-      .collection('postedArticles')
+      .collection(POSTED_ARTICLE_COLLECTION_NAME)
       .findOne({ link })
 
     return Boolean(existingArticle)
@@ -16,22 +17,27 @@ async function isArticlePosted(db: Db, link: string): Promise<boolean> {
   }
 }
 
-export async function getOldestUnpostedArticle(db: Db, articles: FeedItem[]) {
+export async function getOldestUnpostedArticle(
+  db: Db | undefined,
+  articles: FeedItem[]
+) {
   const filteredArticles = articles.sort(
-    (a, b) => new Date(a.isoDate).getTime() - new Date(b.isoDate).getTime()
+    (a, b) => new Date(a.pubDate).getTime() - new Date(b.pubDate).getTime()
   )
 
   let oldestUnpostedArticle: FeedItem | undefined = undefined
 
   const lastPostedArticle = await db
-    .collection('postedArticles')
+    ?.collection(POSTED_ARTICLE_COLLECTION_NAME)
     .find()
     .sort({ _id: -1 })
     .limit(1)
     .toArray()
     .then(arr => arr[0])
 
-  const lastPostedArticleAuthor = new URL(lastPostedArticle.link).hostname
+  const lastPostedArticleAuthor = lastPostedArticle
+    ? new URL(lastPostedArticle.link).hostname
+    : undefined
 
   /* Split articles by last posted author and other authors */
   const { articlesByLastPostedAuthor, articlesByOtherAuthors } =
@@ -39,7 +45,7 @@ export async function getOldestUnpostedArticle(db: Db, articles: FeedItem[]) {
       (acc, article) => {
         const articleAuthor = new URL(article.link).hostname
 
-        if (articleAuthor === lastPostedArticleAuthor) {
+        if (lastPostedArticle && articleAuthor === lastPostedArticleAuthor) {
           return {
             ...acc,
             articlesByLastPostedAuthor: [
@@ -61,7 +67,7 @@ export async function getOldestUnpostedArticle(db: Db, articles: FeedItem[]) {
      prioritize posting articles from other authors */
   if (lastPostedArticle) {
     for (const article of articlesByOtherAuthors) {
-      if (!(await isArticlePosted(db, article.link))) {
+      if (db && !(await isArticlePosted(db, article.link))) {
         oldestUnpostedArticle = article
         break
       }
@@ -76,7 +82,7 @@ export async function getOldestUnpostedArticle(db: Db, articles: FeedItem[]) {
 
   /* Check if there are any unposted articles from the last posted author */
   for (const article of articlesByLastPostedAuthor) {
-    if (!(await isArticlePosted(db, article.link))) {
+    if (db && !(await isArticlePosted(db, article.link))) {
       oldestUnpostedArticle = article
       break
     }
