@@ -16,13 +16,13 @@ import type { Agent } from 'https'
  */
 export class CustomTweetService {
   /** The api key to use for authenticating against Twitter API as user. */
-  private readonly apiKey: string
+  readonly #apiKey: string
 
   /**
    * @param config - The config object for configuring the Rettiwt instance.
    */
   public constructor(config: { apiKey: string }) {
-    this.apiKey = config.apiKey
+    this.#apiKey = config.apiKey
   }
 
   public static getUserId(apiKey: string): string {
@@ -57,9 +57,9 @@ export class CustomTweetService {
    *
    * @returns The generated AuthCredential
    */
-  private async getCredential(): Promise<AuthCredential> {
+  async #getCredential(): Promise<AuthCredential> {
     return new AuthCredential(
-      CustomTweetService.decodeCookie(this.apiKey).split(';')
+      CustomTweetService.decodeCookie(this.#apiKey).split(';')
     )
   }
 
@@ -70,17 +70,17 @@ export class CustomTweetService {
    *
    * @returns The https agent to use.
    */
-  private getHttpsAgent(): Agent {
+  #getHttpsAgent(): Agent {
     return new https.Agent()
   }
 
   public async getRequestConfig(
     startingConfig: AxiosRequestConfig
   ): Promise<AxiosRequestConfig> {
-    const httpsAgent: Agent = this.getHttpsAgent()
+    const httpsAgent: Agent = this.#getHttpsAgent()
 
     // Getting credentials from key
-    const cred: AuthCredential = await this.getCredential()
+    const cred: AuthCredential = await this.#getCredential()
 
     const config = {
       ...startingConfig,

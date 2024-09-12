@@ -2,13 +2,11 @@ import { OpenAIService } from '../openai/OpenAIService'
 import { TwitterService } from '../twitter/TwitterService'
 import { MongoService } from '../database/MongoService'
 import { fetchArticles, getLLMPollParameters } from './utils'
-import { getThreadContent } from './utils/getThreadContent'
-import { getTweetContent } from './utils/getTweetContent'
 import type { IRSSService } from './interfaces/IRSSService'
 import type { MongoServiceParams } from '../database/MongoService'
 import type { TwitterServiceParams } from '../twitter/TwitterService'
 import type { OpenAIServiceParams } from '../openai/OpenAIService'
-import type { RSSFeed, FeedItem } from './utils'
+import type { RSSFeed, Article } from './utils'
 
 const POSTED_ARTICLE_COLLECTION_NAME = 'posted-articles'
 
@@ -19,10 +17,10 @@ export type RSSServiceParams = {
   OpenAIServiceParams
 
 export class RSSService implements IRSSService {
-  private rssFeeds: RSSFeed[]
-  private dbService: MongoService | undefined
-  private twitterService: TwitterService
-  private openAIService: OpenAIService
+  readonly #rssFeeds: RSSFeed[]
+  readonly #dbService: MongoService | undefined
+  readonly #twitterService: TwitterService
+  readonly #openAIService: OpenAIService
 
   constructor(readonly params: RSSServiceParams) {
     const {
@@ -34,86 +32,86 @@ export class RSSService implements IRSSService {
       rssFeeds
     } = params
 
-    this.rssFeeds = rssFeeds
+    this.#rssFeeds = rssFeeds
 
     if (mongoUri) {
-      this.dbService = new MongoService({
+      this.#dbService = new MongoService({
         mongoUri,
         customDbName
       })
     }
-    this.twitterService = new TwitterService({
+    this.#twitterService = new TwitterService({
       twitterTokens,
       rettiwtApiKey
     })
-    this.openAIService = new OpenAIService({
+    this.#openAIService = new OpenAIService({
       openaiApiKey
     })
   }
 
   async postArticleTweet({
-    textPrompt,
+    getPrompt,
     earliestPublishDate,
     customArticleFilter
   }: {
-    textPrompt: string
+    getPrompt: (article: Article) => string
     earliestPublishDate?: Date | undefined
-    customArticleFilter?: ((feedItem: FeedItem) => boolean) | undefined
+    customArticleFilter?: ((article: Article) => boolean) | undefined
   }) {
     const articles = await fetchArticles(
-      this.rssFeeds,
+      this.#rssFeeds,
       earliestPublishDate,
       customArticleFilter
     )
 
     const oldestUnpublishedArticle =
-      await this.getOldestUnpublishedArticle(articles)
+      await this.#getOldestUnpublishedArticle(articles)
 
     if (!oldestUnpublishedArticle) {
       // TODO: Logging?
       return
     }
 
-    const tweetContent = getTweetContent(oldestUnpublishedArticle, textPrompt)
+    const tweetContent = getPrompt(oldestUnpublishedArticle)
 
-    const tweet = await this.openAIService.generateChatCompletion({
+    const tweet = await this.#openAIService.generateChatCompletion({
       content: tweetContent
     })
 
     // TODO: Make this available to rettiwt or twitter service
-    await this.twitterService.postTweet(tweet)
+    await this.#twitterService.postTweet(tweet)
 
-    await this.markArticleAsPosted({
+    await this.#markArticleAsPosted({
       ...oldestUnpublishedArticle,
       postType: 'tweet'
     })
   }
 
   async postArticleThread({
-    textPrompt,
+    getPrompt,
     earliestPublishDate,
     customArticleFilter
   }: {
-    textPrompt: string
+    getPrompt: (article: Article) => string
     earliestPublishDate?: Date | undefined
-    customArticleFilter?: ((feedItem: FeedItem) => boolean) | undefined
+    customArticleFilter?: ((article: Article) => boolean) | undefined
   }) {
     const articles = await fetchArticles(
-      this.rssFeeds,
+      this.#rssFeeds,
       earliestPublishDate,
       customArticleFilter
     )
 
     const oldestUnpublishedArticle =
-      await this.getOldestUnpublishedArticle(articles)
+      await this.#getOldestUnpublishedArticle(articles)
 
     if (!oldestUnpublishedArticle) {
       return
     }
 
-    const threadContent = getThreadContent(oldestUnpublishedArticle, textPrompt)
+    const threadContent = getPrompt(oldestUnpublishedArticle)
 
-    const generatedContent = await this.openAIService.generateChatCompletion({
+    const generatedContent = await this.#openAIService.generateChatCompletion({
       content: threadContent
     })
 
@@ -125,62 +123,67 @@ export class RSSService implements IRSSService {
       .map(tweet => tweet.trim())
 
     // TODO: Make this available to rettiwt or twitter service
-    await this.twitterService.postThread(tweets)
+    await this.#twitterService.postThread(tweets)
 
-    await this.markArticleAsPosted({
+    await this.#markArticleAsPosted({
       ...oldestUnpublishedArticle,
       postType: 'thread'
     })
   }
 
   async postArticlePoll({
-    textPrompt,
+    getPrompt,
     earliestPublishDate,
     customArticleFilter
   }: {
-    textPrompt: string
+    getPrompt: (article: Article) => string
     earliestPublishDate?: Date | undefined
-    customArticleFilter?: ((feedItem: FeedItem) => boolean) | undefined
+    customArticleFilter?: ((article: Article) => boolean) | undefined
   }) {
     const articles = await fetchArticles(
-      this.rssFeeds,
+      this.#rssFeeds,
       earliestPublishDate,
       customArticleFilter
     )
 
     const oldestUnpublishedArticle =
-      await this.getOldestUnpublishedArticle(articles)
+      await this.#getOldestUnpublishedArticle(articles)
 
     if (!oldestUnpublishedArticle) {
       return
     }
 
     const llmPollParameters = getLLMPollParameters(
-      oldestUnpublishedArticle,
-      textPrompt
+      getPrompt(oldestUnpublishedArticle)
     )
 
     const pollData =
-      await this.openAIService.getStructuredOutput(llmPollParameters)
+      await this.#openAIService.getStructuredOutput(llmPollParameters)
 
     // TODO: Make this available to rettiwt or twitter service
-    await this.twitterService.postPoll(pollData)
+    await this.#twitterService.postPoll(pollData)
 
-    await this.markArticleAsPosted({
+    await this.#markArticleAsPosted({
       ...oldestUnpublishedArticle,
       postType: 'poll'
     })
   }
 
-  private async isArticlePosted(link: string): Promise<boolean> {
-    if (this.dbService === undefined) {
+  /**
+   * Checks if an article has already been posted.
+   * @param link - The URL of the article to check.
+   * @returns A boolean indicating whether the article has been posted.
+   * @private
+   */
+  async #isArticlePosted(link: string): Promise<boolean> {
+    if (this.#dbService === undefined) {
       console.warn('Database service not initialized')
 
       return false
     }
 
     try {
-      const existingArticle = await this.dbService?.findOne<FeedItem>(
+      const existingArticle = await this.#dbService?.findOne<Article>(
         POSTED_ARTICLE_COLLECTION_NAME,
         { link }
       )
@@ -194,14 +197,21 @@ export class RSSService implements IRSSService {
     }
   }
 
-  private async getOldestUnpublishedArticle(articles: FeedItem[]) {
+  /**
+   * Retrieves the oldest unpublished article from a list of articles.
+   * Prioritizes articles from authors different from the last posted article.
+   * @param articles - An array of articles to check.
+   * @returns The oldest unpublished article, or undefined if none found.
+   * @private
+   */
+  async #getOldestUnpublishedArticle(articles: Article[]) {
     const filteredArticles = articles.sort(
       (a, b) => new Date(a.pubDate).getTime() - new Date(b.pubDate).getTime()
     )
 
-    let oldestUnpublishedArticle: FeedItem | undefined = undefined
+    let oldestUnpublishedArticle: Article | undefined = undefined
 
-    const lastPostedArticle = await this.dbService?.findOne<FeedItem>(
+    const lastPostedArticle = await this.#dbService?.findOne<Article>(
       POSTED_ARTICLE_COLLECTION_NAME,
       {
         sort: { _id: -1 }
@@ -234,16 +244,16 @@ export class RSSService implements IRSSService {
           }
         },
         { articlesByLastPostedAuthor: [], articlesByOtherAuthors: [] } as {
-          articlesByLastPostedAuthor: FeedItem[]
-          articlesByOtherAuthors: FeedItem[]
+          articlesByLastPostedAuthor: Article[]
+          articlesByOtherAuthors: Article[]
         }
       )
 
     /* If the last posted article is from a different author, 
      prioritize posting articles from other authors */
-    if (lastPostedArticle && this.dbService !== undefined) {
+    if (lastPostedArticle && this.#dbService !== undefined) {
       for (const article of articlesByOtherAuthors) {
-        if (!(await this.isArticlePosted(article.link))) {
+        if (!(await this.#isArticlePosted(article.link))) {
           oldestUnpublishedArticle = article
           break
         }
@@ -258,7 +268,7 @@ export class RSSService implements IRSSService {
 
     /* Check if there are any unpublished articles from the last posted author */
     for (const article of articlesByLastPostedAuthor) {
-      if (!(await this.isArticlePosted(article.link))) {
+      if (!(await this.#isArticlePosted(article.link))) {
         oldestUnpublishedArticle = article
         break
       }
@@ -267,10 +277,15 @@ export class RSSService implements IRSSService {
     return oldestUnpublishedArticle
   }
 
-  private async markArticleAsPosted(
-    article: FeedItem & { postType: string }
+  /**
+   * Marks an article as posted by saving it to the database.
+   * @param article - The article to mark as posted, including the post type.
+   * @private
+   */
+  async #markArticleAsPosted(
+    article: Article & { postType: string }
   ): Promise<void> {
-    if (this.dbService === undefined) {
+    if (this.#dbService === undefined) {
       console.log(
         'Database service not initialized. Not saving article to database.'
       )
@@ -279,7 +294,7 @@ export class RSSService implements IRSSService {
     }
 
     try {
-      await this.dbService.insertOne(POSTED_ARTICLE_COLLECTION_NAME, article)
+      await this.#dbService.insertOne(POSTED_ARTICLE_COLLECTION_NAME, article)
 
       // TODO: Debug flag
       console.log('Article saved to database', article)

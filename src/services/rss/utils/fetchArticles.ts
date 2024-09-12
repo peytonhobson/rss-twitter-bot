@@ -4,14 +4,21 @@ import type { RSSFeed } from './rssFeed'
 
 const DEFAULT_EARLIEST_PUBLISH_DATE = daysToMilliseconds(1)
 
-export type FeedItem = Awaited<ReturnType<typeof fetchFeed>>[number]
+export type Article = Awaited<ReturnType<typeof fetchFeed>>[number]
 
 const rssParser = new RSSParser()
 
+/**
+ * Fetches articles from multiple RSS feeds and applies filtering.
+ * @param rssFeeds - An array of RSS feed configurations.
+ * @param earliestPublishDate - The earliest date to consider for articles.
+ * @param customArticleFilter - An optional custom filter function for articles.
+ * @returns A promise that resolves to an array of filtered articles.
+ */
 export async function fetchArticles(
   rssFeeds: RSSFeed[],
   earliestPublishDate: Date | undefined,
-  customArticleFilter: ((feedItem: FeedItem) => boolean) | undefined
+  customArticleFilter: ((article: Article) => boolean) | undefined
 ) {
   return (
     await Promise.all(
@@ -24,6 +31,12 @@ export async function fetchArticles(
     .filter(customArticleFilter ?? (() => true))
 }
 
+/**
+ * Fetches and processes articles from a single RSS feed.
+ * @param rssFeed - The RSS feed configuration.
+ * @param earliestPublishDate - The earliest date to consider for articles.
+ * @returns A promise that resolves to an array of processed articles.
+ */
 async function fetchFeed(
   rssFeed: RSSFeed,
   earliestPublishDate: Date | undefined
@@ -31,9 +44,9 @@ async function fetchFeed(
   try {
     const feed = await rssParser.parseURL(rssFeed.feedUrl)
 
-    const validatedFeedItems = validateFeedItems(feed.items)
+    const validatedArticles = validateArticles(feed.items)
 
-    return validatedFeedItems
+    return validatedArticles
       .filter(item => {
         const pubDate = new Date(item.pubDate).getTime()
 
@@ -55,12 +68,17 @@ async function fetchFeed(
   }
 }
 
-function validateFeedItems(items: RSSParser.Item[]) {
-  const validatedItems: NonNullable<ReturnType<typeof validateFeedItem>>[] = []
+/**
+ * Validates an array of RSS feed items.
+ * @param items - An array of RSS feed items to validate.
+ * @returns An array of validated articles.
+ */
+function validateArticles(items: RSSParser.Item[]) {
+  const validatedItems: NonNullable<ReturnType<typeof validateArticle>>[] = []
 
   for (const item of items) {
     try {
-      const validatedItem = validateFeedItem(item)
+      const validatedItem = validateArticle(item)
 
       if (validatedItem) {
         validatedItems.push(validatedItem)
@@ -73,7 +91,12 @@ function validateFeedItems(items: RSSParser.Item[]) {
   return validatedItems
 }
 
-function validateFeedItem(item: RSSParser.Item) {
+/**
+ * Validates a single RSS feed item.
+ * @param item - The RSS feed item to validate.
+ * @returns A validated article object or undefined if validation fails.
+ */
+function validateArticle(item: RSSParser.Item) {
   return r.object(
     item,
     ({ pubDate, link, content, contentSnippet, ...rest }) => ({

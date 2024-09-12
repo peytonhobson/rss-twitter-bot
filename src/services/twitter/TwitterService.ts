@@ -11,14 +11,14 @@ export interface TwitterServiceParams {
 }
 
 export class TwitterService implements ITwitterService {
-  private readonly twitterClient: TwitterApi
-  private readonly customTweetService: CustomTweetService | undefined
+  readonly #twitterClient: TwitterApi
+  readonly #customTweetService: CustomTweetService | undefined
 
   constructor(readonly params: TwitterServiceParams) {
-    this.twitterClient = new TwitterApi(params.twitterTokens)
+    this.#twitterClient = new TwitterApi(params.twitterTokens)
 
     if (params.rettiwtApiKey) {
-      this.customTweetService = new CustomTweetService({
+      this.#customTweetService = new CustomTweetService({
         apiKey: params.rettiwtApiKey
       })
     }
@@ -26,7 +26,7 @@ export class TwitterService implements ITwitterService {
 
   async postTweet(tweet: string) {
     try {
-      await this.twitterClient.v2.tweet(tweet)
+      await this.#twitterClient.v2.tweet(tweet)
 
       // TODO: debug flag
       console.log(`Tweeted: ${tweet}`)
@@ -37,7 +37,7 @@ export class TwitterService implements ITwitterService {
 
   async postThread(tweets: string[]): Promise<void> {
     try {
-      await this.twitterClient.v2.tweetThread(tweets)
+      await this.#twitterClient.v2.tweetThread(tweets)
     } catch (error) {
       console.error('Error posting thread:', error)
     }
@@ -52,13 +52,14 @@ export class TwitterService implements ITwitterService {
     content: string
     options: string[]
   }): Promise<void> {
-    if (this.customTweetService === undefined) {
+    if (this.#customTweetService === undefined) {
       console.error('Polls cannot be created with a rettiwt API key.')
 
       return
     }
 
-    const cardData = await this.customTweetService.request(
+    /* A card uri is needed to generate a poll */
+    const cardData = await this.#customTweetService.request(
       getPollCardDataConfig(options)
     )
 
@@ -70,7 +71,8 @@ export class TwitterService implements ITwitterService {
       return
     }
 
-    await this.customTweetService.request(
+    /* The free twitter api does not support polls, so we need to use the custom tweet service */
+    await this.#customTweetService.request(
       getPollTweetConfig({ text: `${question}\n\n${content}`, cardUri })
     )
   }

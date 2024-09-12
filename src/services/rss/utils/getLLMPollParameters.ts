@@ -1,11 +1,12 @@
 import { r } from '@crossingminds/utils'
-import { getTweetContent } from './getTweetContent'
 import type { OpenAIService } from '../../openai/OpenAIService'
-import type { FeedItem } from './fetchArticles'
 
-export function getLLMPollParameters(article: FeedItem, textPrompt: string) {
-  const content = getTweetContent(article, textPrompt)
-
+/**
+ * Generates the parameters for an LLM poll based on the given content.
+ * @param content - The content to base the poll on.
+ * @returns An object containing the necessary parameters for generating a poll using OpenAI's structured output.
+ */
+export function getLLMPollParameters(content: string) {
   return {
     content,
     tools: [

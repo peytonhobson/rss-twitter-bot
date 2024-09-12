@@ -7,10 +7,10 @@ export interface OpenAIServiceParams {
 }
 
 export class OpenAIService implements IOpenAIService {
-  private openaiClient: OpenAI
+  readonly #openaiClient: OpenAI
 
   constructor(readonly params: OpenAIServiceParams) {
-    this.openaiClient = new OpenAI({ apiKey: params.openaiApiKey })
+    this.#openaiClient = new OpenAI({ apiKey: params.openaiApiKey })
   }
 
   // TODO: Add additional parameters for the OpenAI API
@@ -23,7 +23,7 @@ export class OpenAIService implements IOpenAIService {
     maxTokens?: number
     model?: string
   }): Promise<string> {
-    const response = await this.openaiClient.chat.completions.create({
+    const response = await this.#openaiClient.chat.completions.create({
       model,
       messages: [{ role: 'user', content }],
       max_tokens: maxTokens
@@ -41,7 +41,7 @@ export class OpenAIService implements IOpenAIService {
   }): Promise<T> {
     const { content, tools, model = 'gpt-4o', temperature, sanitize } = params
 
-    const response = await this.openaiClient.chat.completions.create({
+    const response = await this.#openaiClient.chat.completions.create({
       model,
       messages: [{ role: 'user', content }],
       ...(temperature ? { temperature } : {}),

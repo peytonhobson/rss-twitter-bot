@@ -1,18 +1,20 @@
 import type { AxiosRequestConfig } from 'axios'
-// TODO: Clean up and document
 
 // cSpell:ignore longform, notetweets, rweb, misinfo, tipjar
 
+/**
+ * Config for posting a poll card
+ * @param options - The poll options
+ * @returns The card config
+ */
 export function getPollCardDataConfig(options: string[]) {
   const cardData = {
     'twitter:card': 'poll4choice_text_only',
     'twitter:api:api:endpoint': '1',
     'twitter:long:duration_minutes': 1440,
-    // TODO: Support different lengths of options
-    'twitter:string:choice1_label': options[0],
-    'twitter:string:choice2_label': options[1],
-    'twitter:string:choice3_label': options[2],
-    'twitter:string:choice4_label': options[3]
+    ...options.slice(0, 4).map((option, index) => ({
+      [`twitter:string:choice${index + 1}_label`]: option
+    }))
   }
 
   const jsonString = JSON.stringify(cardData)
@@ -30,6 +32,12 @@ export function getPollCardDataConfig(options: string[]) {
   }
 }
 
+/**
+ * Config for posting a poll tweet
+ * @param text - The text of the tweet
+ * @param cardUri - The URI of the card
+ * @returns The tweet config
+ */
 export function getPollTweetConfig({
   text,
   cardUri
