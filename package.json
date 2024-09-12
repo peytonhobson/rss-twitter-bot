@@ -2,11 +2,10 @@
   "name": "rss-twitter-bot",
   "version": "0.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "./dist/bundle.js",
   "type": "module",
   "scripts": {
-    "post-article": "tsx ./src/post/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc --noEmit && node build.ts"
   },
   "keywords": [],
   "author": "",
@@ -27,6 +26,7 @@
     "@crossingminds/eslint-config": "^0.3.10",
     "@types/node": "^22.5.0",
     "@types/node-schedule": "^2.1.7",
+    "esbuild": "^0.23.1",
     "tsx": "^4.17.0",
     "typescript": "^5.5.4"
   }

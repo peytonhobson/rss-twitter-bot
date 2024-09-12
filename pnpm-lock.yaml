@@ -23,9 +23,6 @@ importers:
       mongodb:
         specifier: ^6.8.0
         version: 6.8.0
-      nstall:
-        specifier: ^0.2.0
-        version: 0.2.0
       openai:
         specifier: ^4.56.0
         version: 4.56.0(zod@3.23.8)
@@ -51,6 +48,9 @@ importers:
       '@types/node-schedule':
         specifier: ^2.1.7
         version: 2.1.7
+      esbuild:
+        specifier: ^0.23.1
+        version: 0.23.1
       tsx:
         specifier: ^4.17.0
         version: 4.17.0
@@ -1390,10 +1390,6 @@ packages:
 
   node-releases@2.0.18:
     resolution: {integrity: sha512-d9VeXT4SJ7ZeOqGX6R5EM022wpL+eWPooLI+5UpWn2jCT1aosUQEhQP214x33Wkwx3JQMvIm+tIoVOdodFS40g==}
-
-  nstall@0.2.0:
-    resolution: {integrity: sha512-MFmREfmpBKuHho1VkqCnA2Y3K80MM6GHdug7BeW9JRDN446/tABtLlHQ4DibDffZSGtPPJs8Vi4AZ5HBMfDjvw==}
-    hasBin: true
 
   object-assign@4.1.1:
     resolution: {integrity: sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==}
@@ -3327,8 +3323,6 @@ snapshots:
       whatwg-url: 5.0.0
 
   node-releases@2.0.18: {}
-
-  nstall@0.2.0: {}
 
   object-assign@4.1.1: {}
 

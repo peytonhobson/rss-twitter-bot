@@ -4,6 +4,7 @@ import axios from 'axios'
 import { HttpsProxyAgent } from 'https-proxy-agent'
 import { Auth, AuthCredential } from 'rettiwt-auth'
 
+import { isObjectGuard } from '@crossingminds/utils'
 import type { AxiosRequestConfig } from 'axios'
 import type { IRettiwtConfig } from 'rettiwt-api'
 
@@ -15,7 +16,7 @@ import type { Agent } from 'https'
  *
  * @public
  */
-class CustomFetcherService {
+class CustomTweetService {
   /** The api key to use for authenticating against Twitter API as user. */
   private readonly apiKey?: string
 
@@ -37,7 +38,7 @@ class CustomFetcherService {
   public constructor(config?: IRettiwtConfig) {
     this.apiKey = config?.apiKey
     this.userId = config?.apiKey
-      ? CustomFetcherService.getUserId(config.apiKey)
+      ? CustomTweetService.getUserId(config.apiKey)
       : undefined
     this.authProxyUrl = config?.authProxyUrl ?? config?.proxyUrl
     this.proxyUrl = config?.proxyUrl
@@ -46,7 +47,7 @@ class CustomFetcherService {
 
   public static getUserId(apiKey: string): string {
     // Getting the cookie string from the API key
-    const cookieString: string = CustomFetcherService.decodeCookie(apiKey)
+    const cookieString: string = CustomTweetService.decodeCookie(apiKey)
 
     // Searching for the user id in the cookie string
     const searchResults: string[] | null = cookieString.match(
@@ -79,7 +80,7 @@ class CustomFetcherService {
   private async getCredential(): Promise<AuthCredential> {
     if (this.apiKey) {
       return new AuthCredential(
-        CustomFetcherService.decodeCookie(this.apiKey).split(';')
+        CustomTweetService.decodeCookie(this.apiKey).split(';')
       )
     } else {
       return await new Auth({
@@ -160,7 +161,7 @@ class CustomFetcherService {
       // Returning the reponse body
       return (await axios<T>(config)).data
     } catch (error) {
-      if ('response' in error) {
+      if (isObjectGuard(error) && 'response' in error) {
         console.log(error.response)
       } else {
         console.log(error)
@@ -170,6 +171,6 @@ class CustomFetcherService {
 }
 
 // TODO: Validation
-export const customFetcherService = new CustomFetcherService({
+export const customTweetService = new CustomTweetService({
   apiKey: process.env.RETTIWT_API_KEY
 })

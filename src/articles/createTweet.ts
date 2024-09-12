@@ -1,11 +1,9 @@
-import { openaiClient } from '../clients/openaiClient'
-import { twitterClient } from '../clients/twitterClient'
 import type { FeedItem } from './fetchArticles'
 
 export async function createTweet(article: FeedItem) {
   const content = await getPrompt(article)
 
-  const response = await openaiClient.chat.completions.create({
+  const response = this.openaiClient.chat.completions.create({
     model: 'gpt-4o',
     messages: [{ role: 'user', content }]
   })
@@ -13,7 +11,7 @@ export async function createTweet(article: FeedItem) {
   const tweet = response.choices[0]?.message?.content?.trim() || ''
 
   try {
-    await twitterClient.v2.tweet(tweet)
+    await this.twitterClient.v2.tweet(tweet)
     console.log(`Tweeted: ${tweet}`)
   } catch (error) {
     console.error('Error posting tweet:', error)

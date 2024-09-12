@@ -1,6 +1,5 @@
 import { r } from '@crossingminds/utils'
-import { openaiClient } from '../clients/openaiClient'
-import { customFetcherService } from './CustomFetcherService'
+import { customFetcherService } from './CustomTweetService'
 import type { AxiosRequestConfig } from 'axios'
 import type { FeedItem } from './fetchArticles'
 
@@ -19,9 +18,11 @@ export async function createPoll(article: FeedItem) {
       options: uniqueOptions
     })
 
-    await customFetcherService.request(
-      getPollTweetConfig({ text: `${question}\n\n${content}`, cardUri })
-    )
+    if (cardUri === undefined) {
+      console.error('Error generating cardUri for poll.')
+
+      return
+    }
 
     // TODO: Better log
     console.log(`Poll created: ${question}`)
@@ -49,7 +50,7 @@ async function generatePollQuestionAndOptions(article: FeedItem) {
   Article Snippet: "${article.contentSnippet.slice(0, 300)}"
   `
 
-  const response = await openaiClient.chat.completions.create({
+  const response = await this.openaiClient.chat.completions.create({
     model: 'gpt-4o',
     messages: [{ role: 'user', content }],
     temperature: 0.8,
@@ -103,9 +104,20 @@ async function generatePollQuestionAndOptions(article: FeedItem) {
 
   if (pollData) {
     // TODO: validate these types
-    const { question, content: tweetContent, options } = JSON.parse(pollData)
+    const parsedPollData = r.required(
+      r.object(
+        JSON.parse(pollData),
+        ({ question, content: tweetContent, options }) => {
+          return {
+            question: r.required(r.string(question)),
+            content: r.required(r.string(tweetContent)),
+            options: r.required(r.array(options, r.string))
+          }
+        }
+      )
+    )
 
-    return { question, content: tweetContent, options }
+    return parsedPollData
   } else {
     // TODO: Throw error?
     throw new Error('Failed to generate poll question and options.')
@@ -129,7 +141,7 @@ export async function generateCardUI({ options }: { options: string[] }) {
   return cardUri
 }
 
-function getPollCardDataConfig(options: string[]) {
+export function getPollCardDataConfig(options: string[]) {
   const cardData = {
     'twitter:card': 'poll4choice_text_only',
     'twitter:api:api:endpoint': '1',
@@ -156,7 +168,7 @@ function getPollCardDataConfig(options: string[]) {
   }
 }
 
-function getPollTweetConfig({
+export function getPollTweetConfig({
   text,
   cardUri
 }: {

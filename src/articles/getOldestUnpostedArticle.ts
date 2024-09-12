@@ -60,7 +60,10 @@ export async function getOldestUnpostedArticle(
           articlesByOtherAuthors: [...acc.articlesByOtherAuthors, article]
         }
       },
-      { articlesByLastPostedAuthor: [], articlesByOtherAuthors: [] }
+      { articlesByLastPostedAuthor: [], articlesByOtherAuthors: [] } as {
+        articlesByLastPostedAuthor: FeedItem[]
+        articlesByOtherAuthors: FeedItem[]
+      }
     )
 
   /* If the last posted article is from a different author, 
