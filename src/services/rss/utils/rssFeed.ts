@@ -1,5 +1,4 @@
 export type RSSFeed = {
-  feedLink: string
+  feedUrl: string
   twitterHandle?: string | undefined
-  twitterId?: string | undefined
 }

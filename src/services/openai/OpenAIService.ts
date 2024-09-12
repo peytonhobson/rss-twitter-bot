@@ -3,14 +3,14 @@ import type { ChatCompletionTool } from 'openai/resources'
 import type { IOpenAIService } from './interfaces/IOpenAIService'
 
 export interface OpenAIServiceParams {
-  openaiKey: string
+  openaiApiKey: string
 }
 
 export class OpenAIService implements IOpenAIService {
   private openaiClient: OpenAI
 
   constructor(readonly params: OpenAIServiceParams) {
-    this.openaiClient = new OpenAI({ apiKey: params.openaiKey })
+    this.openaiClient = new OpenAI({ apiKey: params.openaiApiKey })
   }
 
   // TODO: Add additional parameters for the OpenAI API

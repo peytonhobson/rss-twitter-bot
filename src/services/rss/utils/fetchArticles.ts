@@ -13,7 +13,7 @@ export async function fetchArticles(
   earliestPublishDate: Date | undefined
 ) {
   try {
-    const feed = await rssParser.parseURL(rssFeed.feedLink)
+    const feed = await rssParser.parseURL(rssFeed.feedUrl)
 
     const validatedFeedItems = validateFeedItems(feed.items)
 

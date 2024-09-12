@@ -8,29 +8,31 @@ import type { MongoServiceParams } from '../database/MongoService'
 import type { OpenAIServiceParams } from '../openai/OpenAIService'
 import type { TwitterServiceParams } from '../twitter/TwitterService'
 
-export type CoreServiceParams = MongoServiceParams &
+export type CoreServiceParams = Partial<MongoServiceParams> &
   TwitterServiceParams &
   OpenAIServiceParams
 
 export class CoreService implements ICoreService {
-  private dbService: MongoService
+  private dbService: MongoService | undefined
   private twitterService: TwitterService
   private openAIService: OpenAIService
 
   constructor(readonly params: CoreServiceParams) {
-    const { mongoURI, customDbName, openaiKey, twitterTokens, rettiwtApiKey } =
+    const { mongoUri, customDbName, openaiApiKey, twitterTokens, rettiwtApiKey } =
       params
 
-    this.dbService = new MongoService({
-      mongoURI,
-      customDbName
-    })
+    if (mongoUri) {
+      this.dbService = new MongoService({
+        mongoUri,
+        customDbName
+      })
+    }
     this.twitterService = new TwitterService({
       twitterTokens,
       rettiwtApiKey
     })
     this.openAIService = new OpenAIService({
-      openaiKey
+      openaiApiKey
     })
   }
 
@@ -41,7 +43,7 @@ export class CoreService implements ICoreService {
   }: {
     rssFeeds: RSSFeed[]
     earliestPublishDate?: Date | undefined
-    customArticleFilter: (feedItem: FeedItem) => boolean
+    customArticleFilter?: ((feedItem: FeedItem) => boolean) | undefined
   }): Promise<void> {
     const rssService = new RSSService({
       rssFeeds,

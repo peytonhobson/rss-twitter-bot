@@ -36,8 +36,8 @@ export class RSSService {
     earliestPublishDate,
     customArticleFilter
   }: {
-    earliestPublishDate?: Date | undefined
-    customArticleFilter: (feedItem: FeedItem) => boolean
+    earliestPublishDate: Date | undefined
+    customArticleFilter: ((feedItem: FeedItem) => boolean) | undefined
   }): Promise<void> {
     const articles = (
       await Promise.all(
@@ -47,7 +47,7 @@ export class RSSService {
       )
     )
       .flat()
-      .filter(customArticleFilter)
+      .filter(customArticleFilter ?? (() => true))
 
     const oldestUnpostedArticle = await this.getOldestUnpostedArticle(articles)
 

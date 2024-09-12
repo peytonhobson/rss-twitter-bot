@@ -10,8 +10,8 @@ import type { IDatabaseService } from './interfaces/IDatabaseService'
 const DEFAULT_DB_NAME = 'twitter-bot'
 
 export interface MongoServiceParams {
-  mongoURI: string
-  customDbName?: string | undefined
+  mongoUri: string
+  customDbName?: string  | undefined
 }
 
 /**
@@ -23,7 +23,7 @@ export class MongoService implements IDatabaseService {
   private db: Db | undefined = undefined
 
   constructor(readonly params: MongoServiceParams) {
-    this.client = new MongoClient(params.mongoURI)
+    this.client = new MongoClient(params.mongoUri)
     this.dbName = params.customDbName ?? DEFAULT_DB_NAME
   }
 
