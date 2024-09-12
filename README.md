@@ -2,14 +2,6 @@
 
 This package provides a Twitter bot service with RSS feed integration capabilities.
 
-## Installation
-
-To install the package, use your preferred package manager. Here is an example using `pnpm`:
-
-```bash
-pnpm install @rss-twitter-bot
-```
-
 ## Features
 
 - Post articles from RSS feeds to Twitter
@@ -21,8 +13,6 @@ pnpm install @rss-twitter-bot
 typescript
 
 ```typescript
-import { TwitterBotService, RSSFeed } from 'twitter-bot-service';
-
 const rssFeeds = [
   {
     feedUrl: 'https://example.com/article',
@@ -31,7 +21,15 @@ const rssFeeds = [
 ] as const satisfies RSSFeed[];
 
 // Initialize the service
-const twitterBot = new TwitterBotService({
+const rssFeeds = [
+  {
+    feedUrl: 'https://example.com/article',
+    twitterHandle: 'example'
+  }
+] as const satisfies RSSFeed[];
+
+// Initialize the service
+const twitterBot = new RSSTwitterBotService({
   mongoUri: 'your-mongo-uri',
   twitterTokens: {
     accessToken: 'your-access-token',
@@ -40,14 +38,17 @@ const twitterBot = new TwitterBotService({
     appSecret: 'your-app-secret'
   },
   rettiwtApiKey: 'your-rettiwt-api-key',
-  openaiApiKey: 'your-openai-api-key'
-});
-
-// Post the next oldest unposted article from the RSS feeds
-twitterBot.postNextArticle({
+  openaiApiKey: 'your-openai-api-key',
   rssFeeds
 });
+
+/* Post a tweet about the article */
+twitterBot.postArticleTweet({
+  textPrompt: `You are a social media manager for a Twitter account focused on dogs. Create a unique tweet about the following article snippet. Use the template and example provided below to structure the tweet. Avoid using emojis. Make sure the tweet is concise, informative, and includes a call to action for readers to learn more. Add new lines at the end of each paragraph. Add hashtags at the end of the tweet.`
+});
 ```
+
+It's important to note that the article title, link, content snippet, and associated twitter handle (if provided) will be added to the prompt to generate the tweet.
 
 
 ## Configuration

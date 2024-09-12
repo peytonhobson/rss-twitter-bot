@@ -15,13 +15,13 @@ export async function fetchArticles(
 ) {
   return (
     await Promise.all(
-        rssFeeds.map(async rssFeed => {
-          return await fetchFeed(rssFeed, earliestPublishDate)
-        })
-      )
+      rssFeeds.map(async rssFeed => {
+        return await fetchFeed(rssFeed, earliestPublishDate)
+      })
     )
-      .flat()
-      .filter(customArticleFilter ?? (() => true))
+  )
+    .flat()
+    .filter(customArticleFilter ?? (() => true))
 }
 
 async function fetchFeed(

@@ -11,7 +11,7 @@ const DEFAULT_DB_NAME = 'twitter-bot'
 
 export interface MongoServiceParams {
   mongoUri: string
-  customDbName?: string  | undefined
+  customDbName?: string | undefined
 }
 
 /**

@@ -25,7 +25,8 @@
         "strictPropertyInitialization": true,
         "target": "ES2022",
         "declaration": true,
-        "outDir": "./dist"
+        "outDir": "./dist",
+        "emitDeclarationOnly": true
     },
     "include": [
         "./src/**/*.ts"
