@@ -16,7 +16,7 @@ import type { Agent } from 'https'
  *
  * @public
  */
-class CustomTweetService {
+export class CustomTweetService {
   /** The api key to use for authenticating against Twitter API as user. */
   private readonly apiKey?: string
 
