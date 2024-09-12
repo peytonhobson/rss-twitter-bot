@@ -6,13 +6,13 @@ export interface ITwitterService {
    * Posts a single tweet
    * @param tweet - The content of the tweet
    */
-  postTweet(tweet: string): Promise<void>
+  postTweet(tweet: string): Promise<string | undefined>
 
   /**
    * Posts a thread of tweets
    * @param tweets - An array of tweet contents
    */
-  postThread(tweets: string[]): Promise<void>
+  postThread(tweets: string[]): Promise<string | undefined>
 
   /**
    * Posts a poll tweet
@@ -24,5 +24,5 @@ export interface ITwitterService {
     question: string
     content: string
     options: string[]
-  }): Promise<void>
+  }): Promise<string | undefined>
 }

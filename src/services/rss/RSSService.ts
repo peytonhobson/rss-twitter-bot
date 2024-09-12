@@ -12,6 +12,7 @@ const POSTED_ARTICLE_COLLECTION_NAME = 'posted-articles'
 
 export type RSSServiceParams = {
   rssFeeds: RSSFeed[]
+  enableDebug?: boolean
 } & Partial<MongoServiceParams> &
   TwitterServiceParams &
   OpenAIServiceParams
@@ -21,6 +22,7 @@ export class RSSService implements IRSSService {
   readonly #dbService: MongoService | undefined
   readonly #twitterService: TwitterService
   readonly #openAIService: OpenAIService
+  readonly #enableDebug: boolean
 
   constructor(readonly params: RSSServiceParams) {
     const {
@@ -29,10 +31,12 @@ export class RSSService implements IRSSService {
       openaiApiKey,
       twitterTokens,
       rettiwtApiKey,
-      rssFeeds
+      rssFeeds,
+      enableDebug = false
     } = params
 
     this.#rssFeeds = rssFeeds
+    this.#enableDebug = enableDebug
 
     if (mongoUri) {
       this.#dbService = new MongoService({
@@ -68,7 +72,10 @@ export class RSSService implements IRSSService {
       await this.#getOldestUnpublishedArticle(articles)
 
     if (!oldestUnpublishedArticle) {
-      // TODO: Logging?
+      if (this.#enableDebug) {
+        console.log('No matching articles found.')
+      }
+
       return
     }
 
@@ -79,7 +86,11 @@ export class RSSService implements IRSSService {
     })
 
     // TODO: Make this available to rettiwt or twitter service
-    await this.#twitterService.postTweet(tweet)
+    const postedTweet = await this.#twitterService.postTweet(tweet)
+
+    if (this.#enableDebug) {
+      console.log('Posted tweet:', postedTweet)
+    }
 
     await this.#markArticleAsPosted({
       ...oldestUnpublishedArticle,
@@ -106,6 +117,10 @@ export class RSSService implements IRSSService {
       await this.#getOldestUnpublishedArticle(articles)
 
     if (!oldestUnpublishedArticle) {
+      if (this.#enableDebug) {
+        console.log('No matching articles found.')
+      }
+
       return
     }
 
@@ -123,7 +138,11 @@ export class RSSService implements IRSSService {
       .map(tweet => tweet.trim())
 
     // TODO: Make this available to rettiwt or twitter service
-    await this.#twitterService.postThread(tweets)
+    const postedThread = await this.#twitterService.postThread(tweets)
+
+    if (this.#enableDebug) {
+      console.log('Posted thread:', postedThread)
+    }
 
     await this.#markArticleAsPosted({
       ...oldestUnpublishedArticle,
@@ -150,6 +169,10 @@ export class RSSService implements IRSSService {
       await this.#getOldestUnpublishedArticle(articles)
 
     if (!oldestUnpublishedArticle) {
+      if (this.#enableDebug) {
+        console.log('No matching articles found.')
+      }
+
       return
     }
 
@@ -161,7 +184,11 @@ export class RSSService implements IRSSService {
       await this.#openAIService.getStructuredOutput(llmPollParameters)
 
     // TODO: Make this available to rettiwt or twitter service
-    await this.#twitterService.postPoll(pollData)
+    const postedPoll = await this.#twitterService.postPoll(pollData)
+
+    if (this.#enableDebug) {
+      console.log('Posted poll:', postedPoll)
+    }
 
     await this.#markArticleAsPosted({
       ...oldestUnpublishedArticle,
@@ -177,7 +204,9 @@ export class RSSService implements IRSSService {
    */
   async #isArticlePosted(link: string): Promise<boolean> {
     if (this.#dbService === undefined) {
-      console.warn('Database service not initialized')
+      if (this.#enableDebug) {
+        console.warn('Database service not initialized')
+      }
 
       return false
     }
@@ -286,9 +315,11 @@ export class RSSService implements IRSSService {
     article: Article & { postType: string }
   ): Promise<void> {
     if (this.#dbService === undefined) {
-      console.log(
-        'Database service not initialized. Not saving article to database.'
-      )
+      if (this.#enableDebug) {
+        console.log(
+          'Database service not initialized. Not saving article to database.'
+        )
+      }
 
       return
     }
@@ -296,8 +327,9 @@ export class RSSService implements IRSSService {
     try {
       await this.#dbService.insertOne(POSTED_ARTICLE_COLLECTION_NAME, article)
 
-      // TODO: Debug flag
-      console.log('Article saved to database', article)
+      if (this.#enableDebug) {
+        console.log('Article saved to database', article)
+      }
     } catch (error) {
       console.error('Error inserting article:', error)
     }

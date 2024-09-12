@@ -26,20 +26,31 @@ export class TwitterService implements ITwitterService {
 
   async postTweet(tweet: string) {
     try {
-      await this.#twitterClient.v2.tweet(tweet)
+      const postedTweet = await this.#twitterClient.v2.tweet(tweet)
 
-      // TODO: debug flag
-      console.log(`Tweeted: ${tweet}`)
+      const tweetMessage = postedTweet.data.text
+
+      return tweetMessage
     } catch (error) {
       console.error('Error posting tweet:', error)
+
+      return undefined
     }
   }
 
-  async postThread(tweets: string[]): Promise<void> {
+  async postThread(tweets: string[]) {
     try {
-      await this.#twitterClient.v2.tweetThread(tweets)
+      const postedTweet = await this.#twitterClient.v2.tweetThread(tweets)
+
+      const tweetMessage = postedTweet
+        .map(tweet => tweet.data.text)
+        .join('\n\n')
+
+      return tweetMessage
     } catch (error) {
       console.error('Error posting thread:', error)
+
+      return undefined
     }
   }
 
@@ -51,7 +62,7 @@ export class TwitterService implements ITwitterService {
     question: string
     content: string
     options: string[]
-  }): Promise<void> {
+  }) {
     if (this.#customTweetService === undefined) {
       console.error('Polls cannot be created with a rettiwt API key.')
 
@@ -72,8 +83,10 @@ export class TwitterService implements ITwitterService {
     }
 
     /* The free twitter api does not support polls, so we need to use the custom tweet service */
-    await this.#customTweetService.request(
+    const postedTweet = await this.#customTweetService.request(
       getPollTweetConfig({ text: `${question}\n\n${content}`, cardUri })
     )
+
+    return postedTweet?.toString()
   }
 }
