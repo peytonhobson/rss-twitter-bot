@@ -1,12 +1,17 @@
 import { MongoClient } from 'mongodb'
-import type { Db, Collection, Filter, OptionalUnlessRequiredId } from 'mongodb'
+import type {
+  Db,
+  Filter,
+  Document as MongoDocument,
+  OptionalUnlessRequiredId
+} from 'mongodb'
 import type { IDatabaseService } from './interfaces/IDatabaseService'
 
 const DEFAULT_DB_NAME = 'twitter-bot'
 
-interface MongoServiceParams {
-  uri: string
-  customDbName?: string
+export interface MongoServiceParams {
+  mongoURI: string
+  customDbName?: string | undefined
 }
 
 /**
@@ -17,8 +22,8 @@ export class MongoService implements IDatabaseService {
   private dbName: string
   private db: Db | undefined = undefined
 
-  constructor(private readonly params: MongoServiceParams) {
-    this.client = new MongoClient(params.uri)
+  constructor(readonly params: MongoServiceParams) {
+    this.client = new MongoClient(params.mongoURI)
     this.dbName = params.customDbName ?? DEFAULT_DB_NAME
   }
 
@@ -51,12 +56,11 @@ export class MongoService implements IDatabaseService {
    * @param collectionName The name of the collection to get.
    * @returns The collection.
    */
-  private getCollection<T extends Document>(
-    collectionName: string
-  ): Collection<T> {
+  private getCollection<T extends MongoDocument>(collectionName: string) {
     if (!this.db) {
       throw new Error('Database not connected. Call connect() first.')
     }
+
     return this.db.collection<T>(collectionName)
   }
 
@@ -66,22 +70,26 @@ export class MongoService implements IDatabaseService {
    * @param doc The document to insert.
    * @returns The ID of the inserted document.
    */
-  async insertOne<T extends Document>(
+  async insertOne<T extends MongoDocument>(
     collectionName: string,
     doc: OptionalUnlessRequiredId<T>
-  ): Promise<string> {
+  ) {
     const collection = this.getCollection<T>(collectionName)
     const result = await collection.insertOne(doc)
     return result.insertedId.toString()
   }
 
+  // TODO: Type validation
   /**
    * Finds a single document in a collection.
    * @param collectionName The name of the collection to search.
    * @param query The query to filter documents.
    * @returns The found document, or null if not found.
    */
-  async findOne<T extends Document>(collectionName: string, query: Filter<T>) {
+  async findOne<T extends MongoDocument>(
+    collectionName: string,
+    query: Filter<T>
+  ) {
     const collection = this.getCollection<T>(collectionName)
 
     return await collection.findOne(query)
@@ -93,7 +101,10 @@ export class MongoService implements IDatabaseService {
    * @param query The query to filter documents.
    * @returns An array of found documents.
    */
-  async find<T extends Document>(collectionName: string, query: object) {
+  async find<T extends MongoDocument>(
+    collectionName: string,
+    query: Filter<T>
+  ) {
     const collection = this.getCollection<T>(collectionName)
     return await collection.find(query).toArray()
   }

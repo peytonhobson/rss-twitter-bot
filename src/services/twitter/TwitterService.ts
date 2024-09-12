@@ -5,16 +5,16 @@ import { getPollCardDataConfig, getPollTweetConfig } from './pollConfig'
 import type { TwitterApiTokens } from 'twitter-api-v2'
 import type { ITwitterService } from './interfaces/ITwitterService'
 
-interface TwitterServiceParams {
+export interface TwitterServiceParams {
   twitterTokens: TwitterApiTokens
-  rettiwtApiKey?: string
+  rettiwtApiKey?: string | undefined
 }
 
 export class TwitterService implements ITwitterService {
   private readonly twitterClient: TwitterApi
   private readonly customTweetService: CustomTweetService | undefined
 
-  constructor(private readonly params: TwitterServiceParams) {
+  constructor(readonly params: TwitterServiceParams) {
     this.twitterClient = new TwitterApi(params.twitterTokens)
 
     if (params.rettiwtApiKey) {
@@ -43,11 +43,15 @@ export class TwitterService implements ITwitterService {
     }
   }
 
-  async postPoll(
-    question: string,
-    content: string,
+  async postPoll({
+    question,
+    content,
+    options
+  }: {
+    question: string
+    content: string
     options: string[]
-  ): Promise<void> {
+  }): Promise<void> {
     if (this.customTweetService === undefined) {
       console.error('Polls cannot be created with a rettiwt API key.')
 

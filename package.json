@@ -2,10 +2,20 @@
   "name": "rss-twitter-bot",
   "version": "0.0.0",
   "description": "",
-  "main": "./dist/bundle.js",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "CHANGELOG.md"
+  ],
   "type": "module",
   "scripts": {
-    "build": "tsc --noEmit && node build.ts"
+    "build": "pnpm preflight && rm -rf './dist/*' && pnpm build-types && pnpm build-esm && pnpm build-cjs",
+    "build-types": "tsc",
+    "build-esm": "esbuild ./src --platform=node --bundle --target=es2022 --format=esm --sourcemap=external --packages=external --outfile=./dist/index.mjs",
+    "build-cjs": "esbuild ./src --platform=node --bundle --target=es2022 --format=cjs --sourcemap=external --packages=external --outfile=./dist/index.cjs",
+    "preflight": "eslint './src/**'"
   },
   "keywords": [],
   "author": "",
@@ -13,7 +23,6 @@
   "dependencies": {
     "@crossingminds/utils": "^0.5.0",
     "axios": "^1.7.5",
-    "dotenv": "^16.4.5",
     "https-proxy-agent": "^7.0.5",
     "mongodb": "^6.8.0",
     "openai": "^4.56.0",
@@ -25,9 +34,8 @@
   "devDependencies": {
     "@crossingminds/eslint-config": "^0.3.10",
     "@types/node": "^22.5.0",
-    "@types/node-schedule": "^2.1.7",
+    "@types/typescript": "^2.0.0",
     "esbuild": "^0.23.1",
-    "tsx": "^4.17.0",
     "typescript": "^5.5.4"
   }
 }

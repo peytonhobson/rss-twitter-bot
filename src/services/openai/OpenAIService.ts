@@ -1,12 +1,16 @@
 import OpenAI from 'openai'
-import type { FunctionParameters } from 'openai/resources'
+import type { ChatCompletionTool } from 'openai/resources'
 import type { IOpenAIService } from './interfaces/IOpenAIService'
+
+export interface OpenAIServiceParams {
+  openaiKey: string
+}
 
 export class OpenAIService implements IOpenAIService {
   private openaiClient: OpenAI
 
-  constructor(apiKey: string) {
-    this.openaiClient = new OpenAI({ apiKey })
+  constructor(readonly params: OpenAIServiceParams) {
+    this.openaiClient = new OpenAI({ apiKey: params.openaiKey })
   }
 
   // TODO: Add additional parameters for the OpenAI API
@@ -25,55 +29,28 @@ export class OpenAIService implements IOpenAIService {
       max_tokens: maxTokens
     })
 
-    return response.choices[0].message.content?.trim() ?? ''
+    return response.choices[0]?.message.content?.trim() ?? ''
   }
 
-  async getStructuredOutput(params: {
-    content: string
-    functionName: string
-    functionDescription: string
-    parameters: FunctionParameters
-    model?: string
-    temperature?: number
-  }): Promise<string>
   async getStructuredOutput<T>(params: {
     content: string
-    functionName: string
-    functionDescription: string
-    parameters: FunctionParameters
+    tools: ChatCompletionTool[]
     model?: string
     temperature?: number
     sanitize: (data: unknown) => T
   }): Promise<T> {
-    const {
-      content,
-      functionName,
-      functionDescription,
-      parameters,
-      model = 'gpt-4o',
-      temperature,
-      sanitize
-    } = params
+    const { content, tools, model = 'gpt-4o', temperature, sanitize } = params
 
     const response = await this.openaiClient.chat.completions.create({
       model,
       messages: [{ role: 'user', content }],
-      temperature,
+      ...(temperature ? { temperature } : {}),
       tool_choice: 'required',
-      tools: [
-        {
-          type: 'function',
-          function: {
-            name: functionName,
-            description: functionDescription,
-            parameters
-          }
-        }
-      ]
+      tools
     })
 
     const functionCallArguments =
-      response.choices[0].message.tool_calls?.[0].function.arguments
+      response.choices[0]?.message.tool_calls?.[0]?.function.arguments
 
     if (!functionCallArguments) {
       throw new Error('No arguments in the response')

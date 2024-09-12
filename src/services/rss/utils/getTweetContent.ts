@@ -1,24 +1,6 @@
 import type { FeedItem } from './fetchArticles'
 
-export async function createTweet(article: FeedItem) {
-  const content = await getPrompt(article)
-
-  const response = this.openaiClient.chat.completions.create({
-    model: 'gpt-4o',
-    messages: [{ role: 'user', content }]
-  })
-
-  const tweet = response.choices[0]?.message?.content?.trim() || ''
-
-  try {
-    await this.twitterClient.v2.tweet(tweet)
-    console.log(`Tweeted: ${tweet}`)
-  } catch (error) {
-    console.error('Error posting tweet:', error)
-  }
-}
-
-export async function getPrompt(article: FeedItem) {
+export async function getTweetContent(article: FeedItem) {
   const toneOptions = [
     'Write in a friendly, engaging tone.',
     'Write in a concise and informative tone.',

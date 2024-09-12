@@ -1,12 +1,10 @@
 import https from 'https'
 
 import axios from 'axios'
-import { HttpsProxyAgent } from 'https-proxy-agent'
-import { Auth, AuthCredential } from 'rettiwt-auth'
+import { AuthCredential } from 'rettiwt-auth'
 
 import { isObjectGuard } from '@crossingminds/utils'
 import type { AxiosRequestConfig } from 'axios'
-import type { IRettiwtConfig } from 'rettiwt-api'
 
 import type { Agent } from 'https'
 
@@ -18,31 +16,13 @@ import type { Agent } from 'https'
  */
 export class CustomTweetService {
   /** The api key to use for authenticating against Twitter API as user. */
-  private readonly apiKey?: string
-
-  /** The URL To the proxy server to use for all others. */
-  private readonly proxyUrl?: URL
-
-  /** The max wait time for a response. */
-  private readonly timeout: number
-
-  /** The URL to the proxy server to use only for authentication. */
-  protected readonly authProxyUrl?: URL
-
-  /** The id of the authenticated user (if any). */
-  protected readonly userId?: string
+  private readonly apiKey: string
 
   /**
    * @param config - The config object for configuring the Rettiwt instance.
    */
-  public constructor(config?: IRettiwtConfig) {
-    this.apiKey = config?.apiKey
-    this.userId = config?.apiKey
-      ? CustomTweetService.getUserId(config.apiKey)
-      : undefined
-    this.authProxyUrl = config?.authProxyUrl ?? config?.proxyUrl
-    this.proxyUrl = config?.proxyUrl
-    this.timeout = config?.timeout ?? 0
+  public constructor(config: { apiKey: string }) {
+    this.apiKey = config.apiKey
   }
 
   public static getUserId(apiKey: string): string {
@@ -55,7 +35,7 @@ export class CustomTweetService {
     )
 
     // If user id was found
-    if (searchResults) {
+    if (searchResults?.[0]) {
       return searchResults[0]
     }
 
@@ -78,15 +58,9 @@ export class CustomTweetService {
    * @returns The generated AuthCredential
    */
   private async getCredential(): Promise<AuthCredential> {
-    if (this.apiKey) {
-      return new AuthCredential(
-        CustomTweetService.decodeCookie(this.apiKey).split(';')
-      )
-    } else {
-      return await new Auth({
-        proxyUrl: this.authProxyUrl
-      }).getGuestCredential()
-    }
+    return new AuthCredential(
+      CustomTweetService.decodeCookie(this.apiKey).split(';')
+    )
   }
 
   /**
@@ -96,18 +70,14 @@ export class CustomTweetService {
    *
    * @returns The https agent to use.
    */
-  private getHttpsAgent(proxyUrl?: URL): Agent {
-    if (proxyUrl) {
-      return new HttpsProxyAgent(proxyUrl)
-    } else {
-      return new https.Agent()
-    }
+  private getHttpsAgent(): Agent {
+    return new https.Agent()
   }
 
   public async getRequestConfig(
     startingConfig: AxiosRequestConfig
   ): Promise<AxiosRequestConfig> {
-    const httpsAgent: Agent = this.getHttpsAgent(this.proxyUrl)
+    const httpsAgent: Agent = this.getHttpsAgent()
 
     // Getting credentials from key
     const cred: AuthCredential = await this.getCredential()
@@ -116,8 +86,7 @@ export class CustomTweetService {
       ...startingConfig,
       headers: { ...cred.toHeader(), ...startingConfig.headers },
       httpAgent: httpsAgent,
-      httpsAgent: httpsAgent,
-      timeout: this.timeout
+      httpsAgent: httpsAgent
     }
 
     return config
@@ -166,11 +135,8 @@ export class CustomTweetService {
       } else {
         console.log(error)
       }
+
+      return undefined
     }
   }
 }
-
-// TODO: Validation
-export const customTweetService = new CustomTweetService({
-  apiKey: process.env.RETTIWT_API_KEY
-})

@@ -1,4 +1,4 @@
-import type { FunctionParameters } from 'openai/resources'
+import type { ChatCompletionTool } from 'openai/resources'
 
 export interface IOpenAIService {
   /**
@@ -30,20 +30,9 @@ export interface IOpenAIService {
    * @returns The structured output of type T.
    * @throws If the response does not contain a function call or arguments.
    */
-  getStructuredOutput(params: {
-    content: string
-    functionName: string
-    functionDescription: string
-    parameters: FunctionParameters
-    model?: string
-    temperature?: number
-  }): Promise<string>
-
   getStructuredOutput<T>(params: {
     content: string
-    functionName: string
-    functionDescription: string
-    parameters: FunctionParameters
+    tools: ChatCompletionTool[]
     model?: string
     temperature?: number
     sanitize: (data: unknown) => T
