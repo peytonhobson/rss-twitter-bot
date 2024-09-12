@@ -1,23 +1,10 @@
 import { r } from '@crossingminds/utils'
+import { getTweetContent } from './getTweetContent'
 import type { OpenAIService } from '../../openai/OpenAIService'
 import type { FeedItem } from './fetchArticles'
 
-export function getLLMPollParameters(article: FeedItem) {
-  const content = `
-  You are an expert in psychedelics and wellness. Based on the following article snippet, create a Twitter poll question, a comment about the article, and four possible options that encourage engagement and thoughtful discussion. The poll should be relevant to the main topic of the article. The output should be in the following JSON format:
-
-  {
-    "question": "string",
-    "options": ["string", "string", "string", "string"]
-  }
-
-  Ensure the poll question is under 100 characters and each option is under 25 characters.
-
-  Article Title: "${article.title}"
-  Article Link: "${article.link}"
-  Article Twitter Handle: "${article.twitterHandle}"
-  Article Snippet: "${article.contentSnippet.slice(0, 300)}"
-  `
+export function getLLMPollParameters(article: FeedItem, textPrompt: string) {
+  const content = getTweetContent(article, textPrompt)
 
   return {
     content,

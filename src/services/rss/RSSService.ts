@@ -1,53 +1,107 @@
-import {
-  fetchArticles,
-  isArticleSmallEnoughForThread,
-  getLLMPollParameters
-} from './utils'
+import { OpenAIService } from '../openai/OpenAIService'
+import { TwitterService } from '../twitter/TwitterService'
+import { MongoService } from '../database/MongoService'
+import { fetchArticles, getLLMPollParameters } from './utils'
 import { getThreadContent } from './utils/getThreadContent'
 import { getTweetContent } from './utils/getTweetContent'
-import type { OpenAIService } from '../openai/OpenAIService'
-import type { TwitterService } from '../twitter/TwitterService'
-import type { MongoService } from '../database/MongoService'
+import type { IRSSService } from './interfaces/IRSSService'
+import type { MongoServiceParams } from '../database/MongoService'
+import type { TwitterServiceParams } from '../twitter/TwitterService'
+import type { OpenAIServiceParams } from '../openai/OpenAIService'
 import type { RSSFeed, FeedItem } from './utils'
 
 const POSTED_ARTICLE_COLLECTION_NAME = 'posted-articles'
 
-interface RSSServiceParams {
+export type RSSServiceParams = {
   rssFeeds: RSSFeed[]
-  dbService: MongoService | undefined
-  twitterService: TwitterService
-  openAIService: OpenAIService
-}
+} & Partial<MongoServiceParams> &
+  TwitterServiceParams &
+  OpenAIServiceParams
 
-export class RSSService {
-  private rssFeeds: RSSFeed[] = []
+export class RSSService implements IRSSService {
+  private rssFeeds: RSSFeed[]
   private dbService: MongoService | undefined
   private twitterService: TwitterService
   private openAIService: OpenAIService
 
   constructor(readonly params: RSSServiceParams) {
-    this.rssFeeds = params.rssFeeds
-    this.dbService = params.dbService
-    this.twitterService = params.twitterService
-    this.openAIService = params.openAIService
+    const {
+      mongoUri,
+      customDbName,
+      openaiApiKey,
+      twitterTokens,
+      rettiwtApiKey,
+      rssFeeds
+    } = params
+
+    this.rssFeeds = rssFeeds
+
+    if (mongoUri) {
+      this.dbService = new MongoService({
+        mongoUri,
+        customDbName
+      })
+    }
+    this.twitterService = new TwitterService({
+      twitterTokens,
+      rettiwtApiKey
+    })
+    this.openAIService = new OpenAIService({
+      openaiApiKey
+    })
   }
 
-  async tweetNextArticle({
+  async postArticleTweet({
+    textPrompt,
     earliestPublishDate,
     customArticleFilter
   }: {
-    earliestPublishDate: Date | undefined
-    customArticleFilter: ((feedItem: FeedItem) => boolean) | undefined
-  }): Promise<void> {
-    const articles = (
-      await Promise.all(
-        this.rssFeeds.map(async rssFeed => {
-          return await fetchArticles(rssFeed, earliestPublishDate)
-        })
-      )
+    textPrompt: string
+    earliestPublishDate?: Date | undefined
+    customArticleFilter?: ((feedItem: FeedItem) => boolean) | undefined
+  }) {
+    const articles = await fetchArticles(
+      this.rssFeeds,
+      earliestPublishDate,
+      customArticleFilter
     )
-      .flat()
-      .filter(customArticleFilter ?? (() => true))
+
+    const oldestUnpostedArticle = await this.getOldestUnpostedArticle(articles)
+
+    if (!oldestUnpostedArticle) {
+      // TODO: Logging?
+      return
+    }
+
+    const tweetContent = getTweetContent(oldestUnpostedArticle, textPrompt)
+
+    const tweet = await this.openAIService.generateChatCompletion({
+      content: tweetContent
+    })
+
+    // TODO: Make this available to rettwit or twitter service
+    await this.twitterService.postTweet(tweet)
+
+    await this.markArticleAsPosted({
+      ...oldestUnpostedArticle,
+      postType: 'tweet'
+    })
+  }
+
+  async postArticleThread({
+    textPrompt,
+    earliestPublishDate,
+    customArticleFilter
+  }: {
+    textPrompt: string
+    earliestPublishDate?: Date | undefined
+    customArticleFilter?: ((feedItem: FeedItem) => boolean) | undefined
+  }) {
+    const articles = await fetchArticles(
+      this.rssFeeds,
+      earliestPublishDate,
+      customArticleFilter
+    )
 
     const oldestUnpostedArticle = await this.getOldestUnpostedArticle(articles)
 
@@ -55,9 +109,64 @@ export class RSSService {
       return
     }
 
-    const { postType } = await this.tweetArticle(oldestUnpostedArticle)
+    const threadContent = getThreadContent(oldestUnpostedArticle, textPrompt)
 
-    await this.markArticleAsPosted({ ...oldestUnpostedArticle, postType })
+    const generatedContent = await this.openAIService.generateChatCompletion({
+      content: threadContent
+    })
+
+    // TODO: Separate function
+    /* Split tweets by line that starts with a number to ensure 
+       each tweet is a separate tweet */
+    const tweets = generatedContent
+      .split(/(?=\n\d+\/)/)
+      .map(tweet => tweet.trim())
+
+    // TODO: Make this available to rettwit or twitter service
+    await this.twitterService.postThread(tweets)
+
+    await this.markArticleAsPosted({
+      ...oldestUnpostedArticle,
+      postType: 'thread'
+    })
+  }
+
+  async postArticlePoll({
+    textPrompt,
+    earliestPublishDate,
+    customArticleFilter
+  }: {
+    textPrompt: string
+    earliestPublishDate?: Date | undefined
+    customArticleFilter?: ((feedItem: FeedItem) => boolean) | undefined
+  }) {
+    const articles = await fetchArticles(
+      this.rssFeeds,
+      earliestPublishDate,
+      customArticleFilter
+    )
+
+    const oldestUnpostedArticle = await this.getOldestUnpostedArticle(articles)
+
+    if (!oldestUnpostedArticle) {
+      return
+    }
+
+    const llmPollParameters = getLLMPollParameters(
+      oldestUnpostedArticle,
+      textPrompt
+    )
+
+    const pollData =
+      await this.openAIService.getStructuredOutput(llmPollParameters)
+
+    // TODO: Make this available to rettwit or twitter service
+    await this.twitterService.postPoll(pollData)
+
+    await this.markArticleAsPosted({
+      ...oldestUnpostedArticle,
+      postType: 'poll'
+    })
   }
 
   private async isArticlePosted(link: string): Promise<boolean> {
@@ -174,70 +283,5 @@ export class RSSService {
     } catch (error) {
       console.error('Error inserting article:', error)
     }
-  }
-
-  private async tweetArticle(article: FeedItem) {
-    const lastTwoTweets = await this.dbService?.find(
-      POSTED_ARTICLE_COLLECTION_NAME,
-      { sort: { _id: -1 }, limit: 2 }
-    )
-
-    /* Create a 10% chance of creating a poll, but don't create 
-     a poll if either of the last two tweets were polls */
-    const shouldCreatePoll =
-      Math.random() > 0.9 &&
-      (lastTwoTweets?.every(tweet => tweet.postType !== 'poll') ?? true)
-
-    if (shouldCreatePoll) {
-      const llmPollParameters = getLLMPollParameters(article)
-
-      const pollData =
-        await this.openAIService.getStructuredOutput(llmPollParameters)
-
-      await this.twitterService.postPoll(pollData)
-
-      return {
-        postType: 'poll'
-      } as const
-    }
-
-    /* If either of last two tweets were threads, we don't want to create a thread */
-    const shouldCreateThread =
-      isArticleSmallEnoughForThread(article) &&
-      (lastTwoTweets?.every(tweet => tweet.postType !== 'thread') ?? true)
-
-    if (shouldCreateThread) {
-      const threadContent = await getThreadContent(article)
-
-      const generatedContent = await this.openAIService.generateChatCompletion({
-        content: threadContent
-      })
-
-      // TODO: Separate function
-      /* Split tweets by line that starts with a number to ensure 
-       each tweet is a separate tweet */
-      const tweets = generatedContent
-        .split(/(?=\n\d+\/)/)
-        .map(tweet => tweet.trim())
-
-      // TODO: Get Tweets
-      await this.twitterService.postThread(tweets)
-
-      return {
-        postType: 'thread'
-      } as const
-    }
-
-    const tweetContent = await getTweetContent(article)
-
-    const tweet = await this.openAIService.generateChatCompletion({
-      content: tweetContent
-    })
-
-    await this.twitterService.postTweet(tweet)
-
-    return {
-      postType: 'tweet'
-    } as const
   }
 }

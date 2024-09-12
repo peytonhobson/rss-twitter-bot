@@ -1,3 +1,3 @@
-export { CoreService as TwitterBotService } from './services/core/CoreService'
-export type { CoreServiceParams as TwitterBotServiceParams } from './services/core/CoreService'
-export type { RSSFeed } from './services/rss/utils'
+export { RSSService as RSSTwitterBotService } from './services/rss'
+export type { RSSServiceParams as RSSTwitterBotServiceParams } from './services/rss'
+export type { RSSFeed } from './services/rss'

@@ -4,11 +4,27 @@ import type { RSSFeed } from './rssFeed'
 
 const DEFAULT_EARLIEST_PUBLISH_DATE = daysToMilliseconds(1)
 
-export type FeedItem = Awaited<ReturnType<typeof fetchArticles>>[number]
+export type FeedItem = Awaited<ReturnType<typeof fetchFeed>>[number]
 
 const rssParser = new RSSParser()
 
 export async function fetchArticles(
+  rssFeeds: RSSFeed[],
+  earliestPublishDate: Date | undefined,
+  customArticleFilter: ((feedItem: FeedItem) => boolean) | undefined
+) {
+  return (
+    await Promise.all(
+        rssFeeds.map(async rssFeed => {
+          return await fetchFeed(rssFeed, earliestPublishDate)
+        })
+      )
+    )
+      .flat()
+      .filter(customArticleFilter ?? (() => true))
+}
+
+async function fetchFeed(
   rssFeed: RSSFeed,
   earliestPublishDate: Date | undefined
 ) {
