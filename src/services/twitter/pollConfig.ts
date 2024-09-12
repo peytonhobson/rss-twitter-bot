@@ -1,6 +1,8 @@
 import type { AxiosRequestConfig } from 'axios'
 // TODO: Clean up and document
 
+// cSpell:ignore longform, notetweets, rweb, misinfo, tipjar
+
 export function getPollCardDataConfig(options: string[]) {
   const cardData = {
     'twitter:card': 'poll4choice_text_only',

@@ -127,7 +127,7 @@ export class CustomTweetService {
 
     // Sending the request
     try {
-      // Returning the reponse body
+      // Returning the response body
       return (await axios<T>(config)).data
     } catch (error) {
       if (isObjectGuard(error) && 'response' in error) {

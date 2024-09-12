@@ -5,7 +5,7 @@ import type { FeedItem } from '../utils'
  */
 export interface IRSSService {
   /**
-   * Posts a tweet about the oldest unposted article from the RSS feeds.
+   * Posts a tweet about the oldest unpublished article from the RSS feeds.
    * @param earliestPublishDate - The earliest date to consider for articles.
    * @param customArticleFilter - Optional custom filter function for articles.
    */
@@ -16,7 +16,7 @@ export interface IRSSService {
   }): Promise<void>
 
   /**
-   * Posts a thread about the oldest unposted article from the RSS feeds.
+   * Posts a thread about the oldest unpublished article from the RSS feeds.
    * @param earliestPublishDate - The earliest date to consider for articles.
    * @param customArticleFilter - Optional custom filter function for articles.
    */
@@ -27,7 +27,7 @@ export interface IRSSService {
   }): Promise<void>
 
   /**
-   * Posts a poll about the oldest unposted article from the RSS feeds.
+   * Posts a poll about the oldest unpublished article from the RSS feeds.
    * @param earliestPublishDate - The earliest date to consider for articles.
    * @param customArticleFilter - Optional custom filter function for articles.
    */

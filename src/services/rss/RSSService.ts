@@ -66,24 +66,25 @@ export class RSSService implements IRSSService {
       customArticleFilter
     )
 
-    const oldestUnpostedArticle = await this.getOldestUnpostedArticle(articles)
+    const oldestUnpublishedArticle =
+      await this.getOldestUnpublishedArticle(articles)
 
-    if (!oldestUnpostedArticle) {
+    if (!oldestUnpublishedArticle) {
       // TODO: Logging?
       return
     }
 
-    const tweetContent = getTweetContent(oldestUnpostedArticle, textPrompt)
+    const tweetContent = getTweetContent(oldestUnpublishedArticle, textPrompt)
 
     const tweet = await this.openAIService.generateChatCompletion({
       content: tweetContent
     })
 
-    // TODO: Make this available to rettwit or twitter service
+    // TODO: Make this available to rettiwt or twitter service
     await this.twitterService.postTweet(tweet)
 
     await this.markArticleAsPosted({
-      ...oldestUnpostedArticle,
+      ...oldestUnpublishedArticle,
       postType: 'tweet'
     })
   }
@@ -103,13 +104,14 @@ export class RSSService implements IRSSService {
       customArticleFilter
     )
 
-    const oldestUnpostedArticle = await this.getOldestUnpostedArticle(articles)
+    const oldestUnpublishedArticle =
+      await this.getOldestUnpublishedArticle(articles)
 
-    if (!oldestUnpostedArticle) {
+    if (!oldestUnpublishedArticle) {
       return
     }
 
-    const threadContent = getThreadContent(oldestUnpostedArticle, textPrompt)
+    const threadContent = getThreadContent(oldestUnpublishedArticle, textPrompt)
 
     const generatedContent = await this.openAIService.generateChatCompletion({
       content: threadContent
@@ -122,11 +124,11 @@ export class RSSService implements IRSSService {
       .split(/(?=\n\d+\/)/)
       .map(tweet => tweet.trim())
 
-    // TODO: Make this available to rettwit or twitter service
+    // TODO: Make this available to rettiwt or twitter service
     await this.twitterService.postThread(tweets)
 
     await this.markArticleAsPosted({
-      ...oldestUnpostedArticle,
+      ...oldestUnpublishedArticle,
       postType: 'thread'
     })
   }
@@ -146,25 +148,26 @@ export class RSSService implements IRSSService {
       customArticleFilter
     )
 
-    const oldestUnpostedArticle = await this.getOldestUnpostedArticle(articles)
+    const oldestUnpublishedArticle =
+      await this.getOldestUnpublishedArticle(articles)
 
-    if (!oldestUnpostedArticle) {
+    if (!oldestUnpublishedArticle) {
       return
     }
 
     const llmPollParameters = getLLMPollParameters(
-      oldestUnpostedArticle,
+      oldestUnpublishedArticle,
       textPrompt
     )
 
     const pollData =
       await this.openAIService.getStructuredOutput(llmPollParameters)
 
-    // TODO: Make this available to rettwit or twitter service
+    // TODO: Make this available to rettiwt or twitter service
     await this.twitterService.postPoll(pollData)
 
     await this.markArticleAsPosted({
-      ...oldestUnpostedArticle,
+      ...oldestUnpublishedArticle,
       postType: 'poll'
     })
   }
@@ -191,12 +194,12 @@ export class RSSService implements IRSSService {
     }
   }
 
-  private async getOldestUnpostedArticle(articles: FeedItem[]) {
+  private async getOldestUnpublishedArticle(articles: FeedItem[]) {
     const filteredArticles = articles.sort(
       (a, b) => new Date(a.pubDate).getTime() - new Date(b.pubDate).getTime()
     )
 
-    let oldestUnpostedArticle: FeedItem | undefined = undefined
+    let oldestUnpublishedArticle: FeedItem | undefined = undefined
 
     const lastPostedArticle = await this.dbService?.findOne<FeedItem>(
       POSTED_ARTICLE_COLLECTION_NAME,
@@ -241,27 +244,27 @@ export class RSSService implements IRSSService {
     if (lastPostedArticle && this.dbService !== undefined) {
       for (const article of articlesByOtherAuthors) {
         if (!(await this.isArticlePosted(article.link))) {
-          oldestUnpostedArticle = article
+          oldestUnpublishedArticle = article
           break
         }
       }
     }
 
     /* If there are valid articles from other authors, 
-     return the oldest unposted article */
-    if (oldestUnpostedArticle) {
-      return oldestUnpostedArticle
+     return the oldest unpublished article */
+    if (oldestUnpublishedArticle) {
+      return oldestUnpublishedArticle
     }
 
-    /* Check if there are any unposted articles from the last posted author */
+    /* Check if there are any unpublished articles from the last posted author */
     for (const article of articlesByLastPostedAuthor) {
       if (!(await this.isArticlePosted(article.link))) {
-        oldestUnpostedArticle = article
+        oldestUnpublishedArticle = article
         break
       }
     }
 
-    return oldestUnpostedArticle
+    return oldestUnpublishedArticle
   }
 
   private async markArticleAsPosted(
