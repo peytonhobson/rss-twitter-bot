@@ -1,5 +1,11 @@
 # rss-twitter-bot
 
+## 0.1.2
+
+### Patch Changes
+
+- Removed max length from poll content.
+
 ## 0.1.1
 
 ### Patch Changes
