@@ -1,5 +1,11 @@
 # rss-twitter-bot
 
+## 0.1.3
+
+### Patch Changes
+
+- Remove default max tokens from tweets.
+
 ## 0.1.2
 
 ### Patch Changes
