@@ -1,55 +1,33 @@
 import https from 'https'
 
 import axios from 'axios'
-import { HttpsProxyAgent } from 'https-proxy-agent'
-import { Auth, AuthCredential } from 'rettiwt-auth'
+import { AuthCredential } from 'rettiwt-auth'
 
+import { isObjectGuard } from '@crossingminds/utils'
 import type { AxiosRequestConfig } from 'axios'
-import type { IRettiwtConfig } from 'rettiwt-api'
 
 import type { Agent } from 'https'
 
+// NOTE: This is a workaround until the rettiwt-api package supports poll tweets
 /**
  * The base service that handles all HTTP requests.
  *
  * @public
  */
-export class CustomFetcherService {
+export class CustomTweetService {
   /** The api key to use for authenticating against Twitter API as user. */
-  private readonly apiKey?: string
-
-  /** The guest key to use for authenticating against Twitter API as guest. */
-  private readonly guestKey?: string
-
-  /** The URL To the proxy server to use for all others. */
-  private readonly proxyUrl?: URL
-
-  /** The max wait time for a response. */
-  private readonly timeout: number
-
-  /** The URL to the proxy server to use only for authentication. */
-  protected readonly authProxyUrl?: URL
-
-  /** The id of the authenticated user (if any). */
-  protected readonly userId?: string
+  readonly #apiKey: string
 
   /**
    * @param config - The config object for configuring the Rettiwt instance.
    */
-  public constructor(config?: IRettiwtConfig) {
-    this.apiKey = config?.apiKey
-    this.guestKey = config?.guestKey
-    this.userId = config?.apiKey
-      ? CustomFetcherService.getUserId(config.apiKey)
-      : undefined
-    this.authProxyUrl = config?.authProxyUrl ?? config?.proxyUrl
-    this.proxyUrl = config?.proxyUrl
-    this.timeout = config?.timeout ?? 0
+  public constructor(config: { apiKey: string }) {
+    this.#apiKey = config.apiKey
   }
 
   public static getUserId(apiKey: string): string {
     // Getting the cookie string from the API key
-    const cookieString: string = CustomFetcherService.decodeCookie(apiKey)
+    const cookieString: string = CustomTweetService.decodeCookie(apiKey)
 
     // Searching for the user id in the cookie string
     const searchResults: string[] | null = cookieString.match(
@@ -57,7 +35,7 @@ export class CustomFetcherService {
     )
 
     // If user id was found
-    if (searchResults) {
+    if (searchResults?.[0]) {
       return searchResults[0]
     }
 
@@ -79,16 +57,10 @@ export class CustomFetcherService {
    *
    * @returns The generated AuthCredential
    */
-  private async getCredential(): Promise<AuthCredential> {
-    if (this.apiKey) {
-      return new AuthCredential(
-        CustomFetcherService.decodeCookie(this.apiKey).split(';')
-      )
-    } else {
-      return await new Auth({
-        proxyUrl: this.authProxyUrl
-      }).getGuestCredential()
-    }
+  async #getCredential(): Promise<AuthCredential> {
+    return new AuthCredential(
+      CustomTweetService.decodeCookie(this.#apiKey).split(';')
+    )
   }
 
   /**
@@ -98,28 +70,23 @@ export class CustomFetcherService {
    *
    * @returns The https agent to use.
    */
-  private getHttpsAgent(proxyUrl?: URL): Agent {
-    if (proxyUrl) {
-      return new HttpsProxyAgent(proxyUrl)
-    } else {
-      return new https.Agent()
-    }
+  #getHttpsAgent(): Agent {
+    return new https.Agent()
   }
 
   public async getRequestConfig(
     startingConfig: AxiosRequestConfig
   ): Promise<AxiosRequestConfig> {
-    const httpsAgent: Agent = this.getHttpsAgent(this.proxyUrl)
+    const httpsAgent: Agent = this.#getHttpsAgent()
 
     // Getting credentials from key
-    const cred: AuthCredential = await this.getCredential()
+    const cred: AuthCredential = await this.#getCredential()
 
     const config = {
       ...startingConfig,
       headers: { ...cred.toHeader(), ...startingConfig.headers },
       httpAgent: httpsAgent,
-      httpsAgent: httpsAgent,
-      timeout: this.timeout
+      httpsAgent: httpsAgent
     }
 
     return config
@@ -154,23 +121,22 @@ export class CustomFetcherService {
    * ```
    */
   public async request<T>(
-    resource: 'poll',
     startingConfig: AxiosRequestConfig
-  ): Promise<T> {
+  ): Promise<T | undefined> {
     const config = await this.getRequestConfig(startingConfig)
 
     // Sending the request
     try {
-      // Returning the reponse body
+      // Returning the response body
       return (await axios<T>(config)).data
     } catch (error) {
-      if ('response' in error) {
+      if (isObjectGuard(error) && 'response' in error) {
         console.log(error.response)
       } else {
         console.log(error)
       }
 
-      process.exit(1)
+      return undefined
     }
   }
 }

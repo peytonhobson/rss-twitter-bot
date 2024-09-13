@@ -1,48 +1,24 @@
-import { r } from '@crossingminds/utils'
-import { CustomFetcherService } from './CustomFetcherService'
 import type { AxiosRequestConfig } from 'axios'
 
-const customFetcherService = new CustomFetcherService({
-  apiKey: process.env.RETTIWT_API_KEY
-})
+// cSpell:ignore longform, notetweets, rweb, misinfo, tipjar
 
-export async function createPoll({
-  question,
-  content,
-  options
-}: {
-  question: string
-  content: string
-  options: string[]
-}) {
-  const cardData = await customFetcherService.request(
-    'poll',
-    getPollCardDataConfig(options)
-  )
-
-  const cardUri = r.object(cardData, ({ card_uri }) => r.string(card_uri))
-
-  await customFetcherService.request(
-    'poll',
-    getPollTweetConfig({ text: `${question}\n\n${content}`, cardUri })
-  )
-}
-
-function getPollCardDataConfig(options: string[]) {
+/**
+ * Config for posting a poll card
+ * @param options - The poll options
+ * @returns The card config
+ */
+export function getPollCardDataConfig(options: string[]) {
   const cardData = {
     'twitter:card': 'poll4choice_text_only',
     'twitter:api:api:endpoint': '1',
     'twitter:long:duration_minutes': 1440,
-    'twitter:string:choice1_label': options[0],
-    'twitter:string:choice2_label': options[1],
-    'twitter:string:choice3_label': options[2],
-    'twitter:string:choice4_label': options[3]
+    ...options.slice(0, 4).map((option, index) => ({
+      [`twitter:string:choice${index + 1}_label`]: option
+    }))
   }
 
-  // Step 2: Stringify the JSON Object
   const jsonString = JSON.stringify(cardData)
 
-  // Step 3: Use URLSearchParams to Format the Payload
   const data = new URLSearchParams()
   data.append('card_data', jsonString)
 
@@ -56,7 +32,13 @@ function getPollCardDataConfig(options: string[]) {
   }
 }
 
-function getPollTweetConfig({
+/**
+ * Config for posting a poll tweet
+ * @param text - The text of the tweet
+ * @param cardUri - The URI of the card
+ * @returns The tweet config
+ */
+export function getPollTweetConfig({
   text,
   cardUri
 }: {
@@ -67,7 +49,6 @@ function getPollTweetConfig({
     method: 'post',
     url: 'https://x.com/i/api/graphql/xT36w0XM3A8jDynpkram2A/CreateTweet',
     data: {
-      /* eslint-disable @typescript-eslint/naming-convention */
       variables: {
         tweet_text: text,
         card_uri: cardUri,
@@ -106,7 +87,6 @@ function getPollTweetConfig({
         responsive_web_graphql_timeline_navigation_enabled: true,
         responsive_web_enhance_cards_enabled: false
       }
-      /* eslint-enable @typescript-eslint/naming-convention */
     }
   }
 }

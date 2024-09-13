@@ -1,12 +1,21 @@
 {
   "name": "rss-twitter-bot",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "",
-  "main": "index.js",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "CHANGELOG.md"
+  ],
   "type": "module",
   "scripts": {
-    "post-article": "tsx ./src/post/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "pnpm preflight && rm -rf './dist/*' && pnpm build-types && pnpm build-esm && pnpm build-cjs",
+    "build-types": "tsc",
+    "build-esm": "esbuild ./src --platform=node --bundle --target=es2022 --format=esm --sourcemap=external --packages=external --outfile=./dist/index.mjs",
+    "build-cjs": "esbuild ./src --platform=node --bundle --target=es2022 --format=cjs --sourcemap=external --packages=external --outfile=./dist/index.cjs",
+    "preflight": "eslint './src/**' && unimported && ts-unused-exports ./tsconfig.json --excludePathsFromReport=src/index.ts && cspell --no-cache --no-progress './src/**/*.{ts,tsx}'"
   },
   "keywords": [],
   "author": "",
@@ -14,21 +23,21 @@
   "dependencies": {
     "@crossingminds/utils": "^0.5.0",
     "axios": "^1.7.5",
-    "dotenv": "^16.4.5",
-    "https-proxy-agent": "^7.0.5",
     "mongodb": "^6.8.0",
-    "nstall": "^0.2.0",
     "openai": "^4.56.0",
-    "rettiwt-api": "^3.1.1",
     "rettiwt-auth": "^2.1.0",
     "rss-parser": "^3.13.0",
     "twitter-api-v2": "^1.17.2"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.27.8",
     "@crossingminds/eslint-config": "^0.3.10",
     "@types/node": "^22.5.0",
-    "@types/node-schedule": "^2.1.7",
-    "tsx": "^4.17.0",
-    "typescript": "^5.5.4"
+    "@types/typescript": "^2.0.0",
+    "cspell": "^8.14.2",
+    "esbuild": "^0.23.1",
+    "ts-unused-exports": "^10.1.0",
+    "typescript": "^5.5.4",
+    "unimported": "^1.31.1"
   }
 }
