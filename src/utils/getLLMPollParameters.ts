@@ -38,8 +38,7 @@ export function getLLMPollParameters(content: string) {
 
                 Read More: {link}
                 @{twitterHandle}
-                `,
-                    maxLength: 100
+                `
                   },
                   options: {
                     type: 'array',
