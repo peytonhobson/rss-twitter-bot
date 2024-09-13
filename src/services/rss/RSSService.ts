@@ -120,7 +120,9 @@ export class RSSService extends MongoService implements IRSSService {
        each tweet is a separate tweet */
     const tweets = generatedContent
       .split(/(?=\n\d+\/)/)
-      .map(tweet => tweet.trim())
+      .map(tweet =>
+        tweet.trim().replaceAll('[Article Link]', oldestUnpublishedArticle.link)
+      )
 
     // TODO: Make this available to rettiwt or twitter service
     const postedThread = await this.#twitterService.postThread(tweets)
