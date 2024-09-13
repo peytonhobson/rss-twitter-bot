@@ -16,7 +16,7 @@ export class OpenAIService implements IOpenAIService {
   // TODO: Add additional parameters for the OpenAI API
   async generateChatCompletion({
     content,
-    maxTokens = 100,
+    maxTokens,
     model = 'gpt-4o'
   }: {
     content: string
@@ -26,7 +26,7 @@ export class OpenAIService implements IOpenAIService {
     const response = await this.#openaiClient.chat.completions.create({
       model,
       messages: [{ role: 'user', content }],
-      max_tokens: maxTokens
+      ...(maxTokens ? { max_tokens: maxTokens } : {})
     })
 
     return response.choices[0]?.message.content?.trim() ?? ''
