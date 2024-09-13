@@ -5,7 +5,7 @@ import type {
   Document as MongoDocument,
   OptionalUnlessRequiredId
 } from 'mongodb'
-import type { IDatabaseService } from './interfaces/IDatabaseService'
+import type { IMongoService } from './interfaces/IMongoService'
 
 const DEFAULT_DB_NAME = 'twitter-bot'
 
@@ -17,7 +17,7 @@ export interface MongoServiceParams {
 /**
  * Service for interacting with a MongoDB database.
  */
-export class MongoService implements IDatabaseService {
+export class MongoService implements IMongoService {
   readonly #client: MongoClient
   readonly #dbName: string
   #db: Db | undefined = undefined
@@ -27,27 +27,34 @@ export class MongoService implements IDatabaseService {
     this.#dbName = params.customDbName ?? DEFAULT_DB_NAME
   }
 
-  // TODO: Maybe in constructor?
-  async connect(): Promise<void> {
+  async connect() {
     try {
       await this.#client.connect()
+
       this.#db = this.#client.db(this.#dbName)
-      console.log('Connected successfully to MongoDB')
     } catch (error) {
       console.error('Error connecting to MongoDB:', error)
       throw error
     }
   }
 
-  async disconnect(): Promise<void> {
+  async disconnect() {
     await this.#client.close()
     // TODO: Implement debug flag
     console.log('Disconnected from MongoDB')
   }
 
   #getCollection<T extends MongoDocument>(collectionName: string) {
+    if (!this.#client) {
+      console.log('MongoDB client not connected. Skipping collection.')
+
+      return
+    }
+
     if (!this.#db) {
-      throw new Error('Database not connected. Call connect() first.')
+      console.log('Database not connected. Call connect() first.')
+
+      return
     }
 
     return this.#db.collection<T>(collectionName)
@@ -58,6 +65,11 @@ export class MongoService implements IDatabaseService {
     doc: OptionalUnlessRequiredId<T>
   ) {
     const collection = this.#getCollection<T>(collectionName)
+
+    if (!collection) {
+      return undefined
+    }
+
     const result = await collection.insertOne(doc)
     return result.insertedId.toString()
   }
@@ -69,7 +81,11 @@ export class MongoService implements IDatabaseService {
   ) {
     const collection = this.#getCollection<T>(collectionName)
 
-    return await collection.findOne(query)
+    if (!collection) {
+      return undefined
+    }
+
+    return (await collection.findOne(query)) ?? undefined
   }
 
   async find<T extends MongoDocument>(
@@ -77,6 +93,11 @@ export class MongoService implements IDatabaseService {
     query: Filter<T>
   ) {
     const collection = this.#getCollection<T>(collectionName)
+
+    if (!collection) {
+      return undefined
+    }
+
     return await collection.find(query).toArray()
   }
 }

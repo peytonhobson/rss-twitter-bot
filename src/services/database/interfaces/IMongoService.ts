@@ -3,7 +3,7 @@ import type { OptionalUnlessRequiredId, WithId } from 'mongodb'
 /**
  * Interface for a database service.
  */
-export interface IDatabaseService {
+export interface IMongoService {
   /**
    * Establishes a connection to the database.
    */
@@ -23,7 +23,7 @@ export interface IDatabaseService {
   insertOne<T extends Document>(
     collectionName: string,
     document: OptionalUnlessRequiredId<T>
-  ): Promise<string>
+  ): Promise<string | undefined>
 
   /**
    * Finds a single document in a collection.
@@ -34,7 +34,7 @@ export interface IDatabaseService {
   findOne<T extends Document>(
     collectionName: string,
     query: object
-  ): Promise<WithId<T> | null>
+  ): Promise<WithId<T> | undefined>
 
   /**
    * Finds multiple documents in a collection.
@@ -45,5 +45,5 @@ export interface IDatabaseService {
   find<T extends Document>(
     collectionName: string,
     query: object
-  ): Promise<WithId<T>[]>
+  ): Promise<WithId<T>[] | undefined>
 }

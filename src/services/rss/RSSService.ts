@@ -13,21 +13,20 @@ const POSTED_ARTICLE_COLLECTION_NAME = 'posted-articles'
 export type RSSServiceParams = {
   rssFeeds: RSSFeed[]
   enableDebug?: boolean
-} & Partial<MongoServiceParams> &
+} & MongoServiceParams &
   TwitterServiceParams &
   OpenAIServiceParams
 
-export class RSSService implements IRSSService {
+export class RSSService extends MongoService implements IRSSService {
   readonly #rssFeeds: RSSFeed[]
-  readonly #dbService: MongoService | undefined
   readonly #twitterService: TwitterService
   readonly #openAIService: OpenAIService
   readonly #enableDebug: boolean
 
-  constructor(readonly params: RSSServiceParams) {
+  constructor(override readonly params: RSSServiceParams) {
+    super(params)
+
     const {
-      mongoUri,
-      customDbName,
       openaiApiKey,
       twitterTokens,
       rettiwtApiKey,
@@ -38,12 +37,6 @@ export class RSSService implements IRSSService {
     this.#rssFeeds = rssFeeds
     this.#enableDebug = enableDebug
 
-    if (mongoUri) {
-      this.#dbService = new MongoService({
-        mongoUri,
-        customDbName
-      })
-    }
     this.#twitterService = new TwitterService({
       twitterTokens,
       rettiwtApiKey
@@ -60,6 +53,8 @@ export class RSSService implements IRSSService {
     getPrompt: (article: Article) => string
     customArticleFilter?: ((article: Article) => boolean) | undefined
   }) {
+    await this.connect()
+
     const articles = await fetchArticles(this.#rssFeeds, customArticleFilter)
 
     const oldestUnpublishedArticle =
@@ -99,6 +94,8 @@ export class RSSService implements IRSSService {
     getPrompt: (article: Article) => string
     customArticleFilter?: ((article: Article) => boolean) | undefined
   }) {
+    await this.connect()
+
     const articles = await fetchArticles(this.#rssFeeds, customArticleFilter)
 
     const oldestUnpublishedArticle =
@@ -145,6 +142,8 @@ export class RSSService implements IRSSService {
     getPrompt: (article: Article) => string
     customArticleFilter?: ((article: Article) => boolean) | undefined
   }) {
+    await this.connect()
+
     const articles = await fetchArticles(this.#rssFeeds, customArticleFilter)
 
     const oldestUnpublishedArticle =
@@ -185,16 +184,8 @@ export class RSSService implements IRSSService {
    * @private
    */
   async #isArticlePosted(link: string): Promise<boolean> {
-    if (this.#dbService === undefined) {
-      if (this.#enableDebug) {
-        console.warn('Database service not initialized')
-      }
-
-      return false
-    }
-
     try {
-      const existingArticle = await this.#dbService?.findOne<Article>(
+      const existingArticle = await this.findOne<Article>(
         POSTED_ARTICLE_COLLECTION_NAME,
         { link }
       )
@@ -222,7 +213,7 @@ export class RSSService implements IRSSService {
 
     let oldestUnpublishedArticle: Article | undefined = undefined
 
-    const lastPostedArticle = await this.#dbService?.findOne<Article>(
+    const lastPostedArticle = await this.findOne<Article>(
       POSTED_ARTICLE_COLLECTION_NAME,
       {
         sort: { _id: -1 }
@@ -262,7 +253,7 @@ export class RSSService implements IRSSService {
 
     /* If the last posted article is from a different author, 
      prioritize posting articles from other authors */
-    if (lastPostedArticle && this.#dbService !== undefined) {
+    if (lastPostedArticle) {
       for (const article of articlesByOtherAuthors) {
         if (!(await this.#isArticlePosted(article.link))) {
           oldestUnpublishedArticle = article
@@ -296,20 +287,13 @@ export class RSSService implements IRSSService {
   async #markArticleAsPosted(
     article: Article & { postType: string }
   ): Promise<void> {
-    if (this.#dbService === undefined) {
-      if (this.#enableDebug) {
-        console.log(
-          'Database service not initialized. Not saving article to database.'
-        )
-      }
-
-      return
-    }
-
     try {
-      await this.#dbService.insertOne(POSTED_ARTICLE_COLLECTION_NAME, article)
+      const result = await this.insertOne(
+        POSTED_ARTICLE_COLLECTION_NAME,
+        article
+      )
 
-      if (this.#enableDebug) {
+      if (result && this.#enableDebug) {
         console.log('Article saved to database', article)
       }
     } catch (error) {

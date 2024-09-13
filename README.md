@@ -44,7 +44,13 @@ const twitterBot = new RSSTwitterBotService({
 
 /* Post a tweet about the article */
 twitterBot.postArticleTweet({
-  textPrompt: `You are a social media manager for a Twitter account focused on dogs. Create a unique tweet about the following article snippet. Use the template and example provided below to structure the tweet. Avoid using emojis. Make sure the tweet is concise, informative, and includes a call to action for readers to learn more. Add new lines at the end of each paragraph. Add hashtags at the end of the tweet.`
+  getPrompt: (article) => `You are a social media manager for a Twitter account focused on dogs. Create a unique tweet about the following article snippet. Use the template and example provided below to structure the tweet. Avoid using emojis. Make sure the tweet is concise, informative, and includes a call to action for readers to learn more. Add new lines at the end of each paragraph. Add hashtags at the end of the tweet.
+  
+  Article Title: "${article.title}"
+  Article Link: "${article.link}"
+  Article Twitter Handle: "${article.twitterHandle}"
+  Article Snippet: "${article.contentSnippet.slice(0, 300)}"
+  `
 });
 ```
 
