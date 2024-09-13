@@ -10,7 +10,7 @@ import type { IMongoService } from './interfaces/IMongoService'
 const DEFAULT_DB_NAME = 'twitter-bot'
 
 export interface MongoServiceParams {
-  mongoUri: string
+  mongoUri?: string | undefined
   customDbName?: string | undefined
 }
 
@@ -18,17 +18,25 @@ export interface MongoServiceParams {
  * Service for interacting with a MongoDB database.
  */
 export class MongoService implements IMongoService {
-  readonly #client: MongoClient
+  readonly #client: MongoClient | undefined
   readonly #dbName: string
   #db: Db | undefined = undefined
 
   constructor(readonly params: MongoServiceParams) {
-    this.#client = new MongoClient(params.mongoUri)
+    this.#client = params.mongoUri
+      ? new MongoClient(params.mongoUri)
+      : undefined
     this.#dbName = params.customDbName ?? DEFAULT_DB_NAME
   }
 
   async connect() {
     try {
+      if (!this.#client) {
+        console.log('MongoDB client not connected. Skipping connection.')
+
+        return
+      }
+
       await this.#client.connect()
 
       this.#db = this.#client.db(this.#dbName)
@@ -39,6 +47,12 @@ export class MongoService implements IMongoService {
   }
 
   async disconnect() {
+    if (!this.#client) {
+      console.log('MongoDB client not connected. Skipping disconnection.')
+
+      return
+    }
+
     await this.#client.close()
     // TODO: Implement debug flag
     console.log('Disconnected from MongoDB')

@@ -253,12 +253,10 @@ export class RSSService extends MongoService implements IRSSService {
 
     /* If the last posted article is from a different author, 
      prioritize posting articles from other authors */
-    if (lastPostedArticle) {
-      for (const article of articlesByOtherAuthors) {
-        if (!(await this.#isArticlePosted(article.link))) {
-          oldestUnpublishedArticle = article
-          break
-        }
+    for (const article of articlesByOtherAuthors) {
+      if (!(await this.#isArticlePosted(article.link))) {
+        oldestUnpublishedArticle = article
+        break
       }
     }
 
