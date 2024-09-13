@@ -1,7 +1,10 @@
 import { TwitterApi } from 'twitter-api-v2'
 import { r } from '@crossingminds/utils'
+import {
+  getPollCardDataConfig,
+  getPollTweetConfig
+} from '../../utils/pollConfig'
 import { CustomTweetService } from './CustomTweetService'
-import { getPollCardDataConfig, getPollTweetConfig } from './pollConfig'
 import type { TwitterApiTokens } from 'twitter-api-v2'
 import type { ITwitterService } from './interfaces/ITwitterService'
 

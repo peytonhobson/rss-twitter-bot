@@ -1,12 +1,12 @@
 import { OpenAIService } from '../openai/OpenAIService'
 import { TwitterService } from '../twitter/TwitterService'
 import { MongoService } from '../database/MongoService'
-import { fetchArticles, getLLMPollParameters } from './utils'
+import { fetchArticles, getLLMPollParameters } from '../../utils'
 import type { IRSSService } from './interfaces/IRSSService'
 import type { MongoServiceParams } from '../database/MongoService'
 import type { TwitterServiceParams } from '../twitter/TwitterService'
 import type { OpenAIServiceParams } from '../openai/OpenAIService'
-import type { RSSFeed, Article } from './utils'
+import type { RSSFeed, Article } from '../../models'
 
 const POSTED_ARTICLE_COLLECTION_NAME = 'posted-articles'
 
@@ -55,18 +55,12 @@ export class RSSService implements IRSSService {
 
   async postArticleTweet({
     getPrompt,
-    earliestPublishDate,
     customArticleFilter
   }: {
     getPrompt: (article: Article) => string
-    earliestPublishDate?: Date | undefined
     customArticleFilter?: ((article: Article) => boolean) | undefined
   }) {
-    const articles = await fetchArticles(
-      this.#rssFeeds,
-      earliestPublishDate,
-      customArticleFilter
-    )
+    const articles = await fetchArticles(this.#rssFeeds, customArticleFilter)
 
     const oldestUnpublishedArticle =
       await this.#getOldestUnpublishedArticle(articles)
@@ -100,18 +94,12 @@ export class RSSService implements IRSSService {
 
   async postArticleThread({
     getPrompt,
-    earliestPublishDate,
     customArticleFilter
   }: {
     getPrompt: (article: Article) => string
-    earliestPublishDate?: Date | undefined
     customArticleFilter?: ((article: Article) => boolean) | undefined
   }) {
-    const articles = await fetchArticles(
-      this.#rssFeeds,
-      earliestPublishDate,
-      customArticleFilter
-    )
+    const articles = await fetchArticles(this.#rssFeeds, customArticleFilter)
 
     const oldestUnpublishedArticle =
       await this.#getOldestUnpublishedArticle(articles)
@@ -152,18 +140,12 @@ export class RSSService implements IRSSService {
 
   async postArticlePoll({
     getPrompt,
-    earliestPublishDate,
     customArticleFilter
   }: {
     getPrompt: (article: Article) => string
-    earliestPublishDate?: Date | undefined
     customArticleFilter?: ((article: Article) => boolean) | undefined
   }) {
-    const articles = await fetchArticles(
-      this.#rssFeeds,
-      earliestPublishDate,
-      customArticleFilter
-    )
+    const articles = await fetchArticles(this.#rssFeeds, customArticleFilter)
 
     const oldestUnpublishedArticle =
       await this.#getOldestUnpublishedArticle(articles)

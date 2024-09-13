@@ -1,4 +1,4 @@
-import type { Article } from '../utils'
+import type { Article } from '../../../models'
 
 /**
  * Interface for the RSS service, handling article-based social media posts

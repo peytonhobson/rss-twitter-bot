@@ -1,10 +1,6 @@
-import { daysToMilliseconds, r } from '@crossingminds/utils'
+import { r } from '@crossingminds/utils'
 import RSSParser from 'rss-parser'
-import type { RSSFeed } from './rssFeed'
-
-const DEFAULT_EARLIEST_PUBLISH_DATE = daysToMilliseconds(1)
-
-export type Article = Awaited<ReturnType<typeof fetchFeed>>[number]
+import type { RSSFeed, Article } from '../models'
 
 const rssParser = new RSSParser()
 
@@ -17,13 +13,12 @@ const rssParser = new RSSParser()
  */
 export async function fetchArticles(
   rssFeeds: RSSFeed[],
-  earliestPublishDate: Date | undefined,
   customArticleFilter: ((article: Article) => boolean) | undefined
 ) {
   return (
     await Promise.all(
       rssFeeds.map(async rssFeed => {
-        return await fetchFeed(rssFeed, earliestPublishDate)
+        return await fetchFeed(rssFeed)
       })
     )
   )
@@ -37,31 +32,16 @@ export async function fetchArticles(
  * @param earliestPublishDate - The earliest date to consider for articles.
  * @returns A promise that resolves to an array of processed articles.
  */
-async function fetchFeed(
-  rssFeed: RSSFeed,
-  earliestPublishDate: Date | undefined
-) {
+async function fetchFeed(rssFeed: RSSFeed) {
   try {
     const feed = await rssParser.parseURL(rssFeed.feedUrl)
 
     const validatedArticles = validateArticles(feed.items)
 
-    return validatedArticles
-      .filter(item => {
-        const pubDate = new Date(item.pubDate).getTime()
-
-        /* Filter out articles that are older than the earliest publish date.
-           If no earliest publish date is provided, default to 1 day */
-        return (
-          pubDate >
-          Date.now() -
-            (earliestPublishDate?.getTime() ?? DEFAULT_EARLIEST_PUBLISH_DATE)
-        )
-      })
-      .map(item => ({
-        ...item,
-        twitterHandle: rssFeed.twitterHandle // Add Twitter handle to each feed item
-      }))
+    return validatedArticles.map(item => ({
+      ...item,
+      twitterHandle: rssFeed.twitterHandle // Add Twitter handle to each feed item
+    }))
   } catch (error) {
     console.error('Error parsing feed:', error, rssFeed)
     return []

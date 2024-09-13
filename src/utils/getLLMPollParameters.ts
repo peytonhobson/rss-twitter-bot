@@ -1,5 +1,5 @@
 import { r } from '@crossingminds/utils'
-import type { OpenAIService } from '../../openai/OpenAIService'
+import type { OpenAIService } from '../services/openai/OpenAIService'
 
 /**
  * Generates the parameters for an LLM poll based on the given content.
