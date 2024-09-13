@@ -59,7 +59,6 @@ It's important to note that the article title, link, content snippet, and associ
 
 ## Configuration
 
-- `mongoUri`: (Optional) MongoDB connection URI. If not provided, posted articles will not be tracked. This is useful if you want the bot to avoid posting duplicate articles.
 - `rettiwtApiKey`: (Optional) API key for rettiwt-api. If not provided, certain features like creating polls will not be available.
 
 ## Rettiwt API Integration

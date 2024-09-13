@@ -300,4 +300,15 @@ export class RSSService extends MongoService implements IRSSService {
       console.error('Error inserting article:', error)
     }
   }
+
+  async findLatestPostedArticles(limit: number): Promise<Article[]> {
+    await this.connect()
+
+    const articles = await this.find<Article>(POSTED_ARTICLE_COLLECTION_NAME, {
+      limit,
+      sort: { _id: -1 }
+    })
+
+    return articles as Article[]
+  }
 }

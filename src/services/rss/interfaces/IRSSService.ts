@@ -42,4 +42,11 @@ export interface IRSSService {
     earliestPublishDate?: Date
     customArticleFilter?: (article: Article) => boolean
   }): Promise<void>
+
+  /**
+   * Finds the latest posted articles
+   * @param limit - The number of articles to find
+   * @returns The latest posted articles
+   */
+  findLatestPostedArticles(limit: number): Promise<Article[]>
 }
