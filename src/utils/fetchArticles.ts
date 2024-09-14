@@ -1,5 +1,5 @@
-import { r } from '@crossingminds/utils'
 import RSSParser from 'rss-parser'
+import { validateArticle } from '../models/article'
 import type { RSSFeed, Article } from '../models'
 
 const rssParser = new RSSParser()
@@ -36,12 +36,14 @@ async function fetchFeed(rssFeed: RSSFeed) {
   try {
     const feed = await rssParser.parseURL(rssFeed.feedUrl)
 
-    const validatedArticles = validateArticles(feed.items)
-
-    return validatedArticles.map(item => ({
+    const feedItemsWithTwitterHandle = feed.items.map(item => ({
       ...item,
-      twitterHandle: rssFeed.twitterHandle // Add Twitter handle to each feed item
+      twitterHandle: rssFeed.twitterHandle
     }))
+
+    const validatedArticles = validateArticles(feedItemsWithTwitterHandle)
+
+    return validatedArticles
   } catch (error) {
     console.error('Error parsing feed:', error, rssFeed)
     return []
@@ -53,8 +55,8 @@ async function fetchFeed(rssFeed: RSSFeed) {
  * @param items - An array of RSS feed items to validate.
  * @returns An array of validated articles.
  */
-function validateArticles(items: RSSParser.Item[]) {
-  const validatedItems: NonNullable<ReturnType<typeof validateArticle>>[] = []
+function validateArticles(items: unknown[]) {
+  const validatedItems: Article[] = []
 
   for (const item of items) {
     try {
@@ -64,28 +66,9 @@ function validateArticles(items: RSSParser.Item[]) {
         validatedItems.push(validatedItem)
       }
     } catch (error) {
-      console.error('Error validating feed item:', error, item)
+      console.error('Error validating article:', error, item)
     }
   }
 
   return validatedItems
-}
-
-/**
- * Validates a single RSS feed item.
- * @param item - The RSS feed item to validate.
- * @returns A validated article object or undefined if validation fails.
- */
-function validateArticle(item: RSSParser.Item) {
-  return r.object(
-    item,
-    ({ pubDate, link, content, contentSnippet, ...rest }) => ({
-      pubDate: r.required(r.string(pubDate)),
-      link: r.required(r.string(link)),
-      content: r.required(r.string(content)),
-      contentSnippet: r.required(r.string(contentSnippet)),
-      title: r.required(r.string(item.title)),
-      ...rest
-    })
-  )
 }

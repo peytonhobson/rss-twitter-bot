@@ -1,5 +1,11 @@
 # rss-twitter-bot
 
+## 0.1.6
+
+### Patch Changes
+
+- Switched RSSService to use MongoService through composition rather than inheritance.
+
 ## 0.1.3
 
 ### Patch Changes

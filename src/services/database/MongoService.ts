@@ -88,7 +88,7 @@ export class MongoService implements IMongoService {
     return result.insertedId.toString()
   }
 
-  // TODO: Type validation
+  // TODO: Add sanitization function
   async findOne<T extends MongoDocument>(
     collectionName: string,
     query: Filter<T>
@@ -99,7 +99,7 @@ export class MongoService implements IMongoService {
       return undefined
     }
 
-    return (await collection.findOne(query)) ?? undefined
+    return (await collection.findOne<T>(query)) ?? undefined
   }
 
   async find<T extends MongoDocument>(

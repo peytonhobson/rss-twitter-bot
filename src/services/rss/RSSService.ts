@@ -1,7 +1,9 @@
+/* eslint-disable prettier/prettier */
 import { OpenAIService } from '../openai/OpenAIService'
 import { TwitterService } from '../twitter/TwitterService'
 import { MongoService } from '../database/MongoService'
 import { fetchArticles, getLLMPollParameters } from '../../utils'
+import { validatePostedArticle, type PostedArticle } from '../../models/article'
 import type { IRSSService } from './interfaces/IRSSService'
 import type { MongoServiceParams } from '../database/MongoService'
 import type { TwitterServiceParams } from '../twitter/TwitterService'
@@ -17,14 +19,14 @@ export type RSSServiceParams = {
   TwitterServiceParams &
   OpenAIServiceParams
 
-export class RSSService extends MongoService implements IRSSService {
+export class RSSService implements IRSSService {
   readonly #rssFeeds: RSSFeed[]
   readonly #twitterService: TwitterService
   readonly #openAIService: OpenAIService
+  readonly #mongoService: MongoService
   readonly #enableDebug: boolean
 
-  constructor(override readonly params: RSSServiceParams) {
-    super(params)
+  constructor(readonly params: RSSServiceParams) {
 
     const {
       openaiApiKey,
@@ -33,6 +35,8 @@ export class RSSService extends MongoService implements IRSSService {
       rssFeeds,
       enableDebug = false
     } = params
+
+    this.#mongoService = new MongoService(params)
 
     this.#rssFeeds = rssFeeds
     this.#enableDebug = enableDebug
@@ -53,7 +57,7 @@ export class RSSService extends MongoService implements IRSSService {
     getPrompt: (article: Article) => string
     customArticleFilter?: ((article: Article) => boolean) | undefined
   }) {
-    await this.connect()
+    await this.#mongoService.connect()
 
     const articles = await fetchArticles(this.#rssFeeds, customArticleFilter)
 
@@ -94,7 +98,7 @@ export class RSSService extends MongoService implements IRSSService {
     getPrompt: (article: Article) => string
     customArticleFilter?: ((article: Article) => boolean) | undefined
   }) {
-    await this.connect()
+   await this.#mongoService.connect()
 
     const articles = await fetchArticles(this.#rssFeeds, customArticleFilter)
 
@@ -144,7 +148,7 @@ export class RSSService extends MongoService implements IRSSService {
     getPrompt: (article: Article) => string
     customArticleFilter?: ((article: Article) => boolean) | undefined
   }) {
-    await this.connect()
+    await this.#mongoService.connect()
 
     const articles = await fetchArticles(this.#rssFeeds, customArticleFilter)
 
@@ -187,7 +191,7 @@ export class RSSService extends MongoService implements IRSSService {
    */
   async #isArticlePosted(link: string): Promise<boolean> {
     try {
-      const existingArticle = await this.findOne<Article>(
+      const existingArticle = await this.#mongoService.findOne(
         POSTED_ARTICLE_COLLECTION_NAME,
         { link }
       )
@@ -215,11 +219,10 @@ export class RSSService extends MongoService implements IRSSService {
 
     let oldestUnpublishedArticle: Article | undefined = undefined
 
-    const lastPostedArticle = await this.findOne<Article>(
-      POSTED_ARTICLE_COLLECTION_NAME,
-      {
+    const lastPostedArticle = validatePostedArticle(
+      await this.#mongoService.findOne<PostedArticle>(POSTED_ARTICLE_COLLECTION_NAME, {
         sort: { _id: -1 }
-      }
+      })
     )
 
     const lastPostedArticleAuthor = lastPostedArticle
@@ -285,10 +288,10 @@ export class RSSService extends MongoService implements IRSSService {
    * @private
    */
   async #markArticleAsPosted(
-    article: Article & { postType: string }
+    article: PostedArticle
   ): Promise<void> {
     try {
-      const result = await this.insertOne(
+      const result = await this.#mongoService.insertOne<PostedArticle>(
         POSTED_ARTICLE_COLLECTION_NAME,
         article
       )
@@ -301,14 +304,14 @@ export class RSSService extends MongoService implements IRSSService {
     }
   }
 
-  async findLatestPostedArticles(limit: number): Promise<Article[]> {
-    await this.connect()
+  async findLatestPostedArticles(limit: number): Promise<PostedArticle[]> {
+    await this.#mongoService.connect()
 
-    const articles = await this.find<Article>(POSTED_ARTICLE_COLLECTION_NAME, {
+    const articles = await this.#mongoService.find<Article>(POSTED_ARTICLE_COLLECTION_NAME, {
       limit,
       sort: { _id: -1 }
     })
 
-    return articles as Article[]
+    return articles?.map(validatePostedArticle).filter(article => article !== undefined) ?? []
   }
 }

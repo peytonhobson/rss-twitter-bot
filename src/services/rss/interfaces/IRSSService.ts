@@ -1,4 +1,5 @@
 import type { Article } from '../../../models'
+import type { PostedArticle } from '../../../models/article'
 
 /**
  * Interface for the RSS service, handling article-based social media posts
@@ -48,5 +49,5 @@ export interface IRSSService {
    * @param limit - The number of articles to find
    * @returns The latest posted articles
    */
-  findLatestPostedArticles(limit: number): Promise<Article[]>
+  findLatestPostedArticles(limit: number): Promise<PostedArticle[]>
 }

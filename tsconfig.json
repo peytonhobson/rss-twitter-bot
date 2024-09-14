@@ -26,12 +26,13 @@
         "target": "ES2022",
         "declaration": true,
         "outDir": "./dist",
-        "emitDeclarationOnly": true
+        "emitDeclarationOnly": true,
     },
     "include": [
         "./src/**/*.ts"
     ],
     "exclude": [
-        "node_modules",
+        "dist",
+        "node_modules"
     ]
 }

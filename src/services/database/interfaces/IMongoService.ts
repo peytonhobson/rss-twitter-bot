@@ -1,4 +1,8 @@
-import type { OptionalUnlessRequiredId, WithId } from 'mongodb'
+import type {
+  OptionalUnlessRequiredId,
+  WithId,
+  Document as MongoDocument
+} from 'mongodb'
 
 /**
  * Interface for a database service.
@@ -20,7 +24,7 @@ export interface IMongoService {
    * @param document The document to insert.
    * @returns The ID of the inserted document.
    */
-  insertOne<T extends Document>(
+  insertOne<T extends MongoDocument>(
     collectionName: string,
     document: OptionalUnlessRequiredId<T>
   ): Promise<string | undefined>
@@ -31,7 +35,7 @@ export interface IMongoService {
    * @param query The query to filter documents.
    * @returns The found document, or null if not found.
    */
-  findOne<T extends Document>(
+  findOne<T extends MongoDocument>(
     collectionName: string,
     query: object
   ): Promise<WithId<T> | undefined>
@@ -42,7 +46,7 @@ export interface IMongoService {
    * @param query The query to filter documents.
    * @returns An array of found documents.
    */
-  find<T extends Document>(
+  find<T extends MongoDocument>(
     collectionName: string,
     query: object
   ): Promise<WithId<T>[] | undefined>
