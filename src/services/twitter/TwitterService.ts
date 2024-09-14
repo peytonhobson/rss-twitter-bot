@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { TwitterApi } from 'twitter-api-v2'
 import { r } from '@crossingminds/utils'
 import {
@@ -11,29 +12,36 @@ import type { ITwitterService } from './interfaces/ITwitterService'
 export interface TwitterServiceParams {
   twitterTokens: TwitterApiTokens
   rettiwtApiKey?: string | undefined
+  enableDebug?: boolean
 }
 
 export class TwitterService implements ITwitterService {
   readonly #twitterClient: TwitterApi
   readonly #customTweetService: CustomTweetService | undefined
+  readonly #enableDebug: boolean = false
 
   constructor(readonly params: TwitterServiceParams) {
     this.#twitterClient = new TwitterApi(params.twitterTokens)
-
     if (params.rettiwtApiKey) {
       this.#customTweetService = new CustomTweetService({
         apiKey: params.rettiwtApiKey
       })
     }
+
+    this.#enableDebug = Boolean(params.enableDebug)
   }
 
   async postTweet(tweet: string) {
     try {
       const postedTweet = await this.#twitterClient.v2.tweet(tweet)
 
+      if (this.#enableDebug) {
       const tweetMessage = postedTweet.data.text
 
-      return tweetMessage
+        console.log('Posted tweet:', tweetMessage)
+      }
+
+      return postedTweet
     } catch (error) {
       console.error('Error posting tweet:', error)
 
@@ -45,11 +53,15 @@ export class TwitterService implements ITwitterService {
     try {
       const postedTweet = await this.#twitterClient.v2.tweetThread(tweets)
 
-      const tweetMessage = postedTweet
-        .map(tweet => tweet.data.text)
+      if (this.#enableDebug) {
+        const tweetMessage = postedTweet
+          .map(tweet => tweet.data.text)
         .join('\n\n')
 
-      return tweetMessage
+        console.log('Posted tweet:', tweetMessage)
+      }
+
+      return postedTweet
     } catch (error) {
       console.error('Error posting thread:', error)
 
@@ -90,6 +102,7 @@ export class TwitterService implements ITwitterService {
       getPollTweetConfig({ text: `${question}\n\n${content}`, cardUri })
     )
 
-    return postedTweet?.toString()
+    // TODO: Type validation
+    return postedTweet
   }
 }

@@ -27,6 +27,7 @@ export class MongoService implements IMongoService {
       ? new MongoClient(params.mongoUri)
       : undefined
     this.#dbName = params.customDbName ?? DEFAULT_DB_NAME
+    console.log(this.#dbName)
   }
 
   async connect() {
@@ -40,6 +41,7 @@ export class MongoService implements IMongoService {
       await this.#client.connect()
 
       this.#db = this.#client.db(this.#dbName)
+      console.log(this.#db)
     } catch (error) {
       console.error('Error connecting to MongoDB:', error)
       throw error

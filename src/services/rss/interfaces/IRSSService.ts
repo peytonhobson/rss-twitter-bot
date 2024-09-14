@@ -1,3 +1,4 @@
+import type { TweetV2PostTweetResult } from 'twitter-api-v2'
 import type { Article } from '../../../models'
 import type { PostedArticle } from '../../../models/article'
 
@@ -16,7 +17,13 @@ export interface IRSSService {
     getPrompt: (article: Article) => string
     earliestPublishDate?: Date
     customArticleFilter?: (article: Article) => boolean
-  }): Promise<void>
+  }): Promise<
+    | {
+        article: Article
+        tweet: TweetV2PostTweetResult | undefined
+      }
+    | undefined
+  >
 
   /**
    * Posts a thread about the oldest unpublished article from the RSS feeds
@@ -29,7 +36,13 @@ export interface IRSSService {
     getPrompt: (article: Article) => string
     earliestPublishDate?: Date
     customArticleFilter?: (article: Article) => boolean
-  }): Promise<void>
+  }): Promise<
+    | {
+        article: Article
+        tweets: TweetV2PostTweetResult[] | undefined
+      }
+    | undefined
+  >
 
   /**
    * Posts a poll about the oldest unpublished article from the RSS feeds
@@ -42,7 +55,13 @@ export interface IRSSService {
     getPrompt: (article: Article) => string
     earliestPublishDate?: Date
     customArticleFilter?: (article: Article) => boolean
-  }): Promise<void>
+  }): Promise<
+    | {
+        article: Article
+        poll: unknown
+      }
+    | undefined
+  >
 
   /**
    * Finds the latest posted articles

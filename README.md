@@ -61,6 +61,12 @@ It's important to note that the article title, link, content snippet, and associ
 - `mongoUri`: (Optional) MongoDB connection URI. If not provided, posted articles will not be tracked. This is useful if you want the bot to avoid posting duplicate articles.
 - `rettiwtApiKey`: (Optional) API key for rettiwt-api. If not provided, certain features like creating polls will not be available.
 
+## Tracking Posted Articles
+
+This package uses MongoDB to track posted articles by default. If you want to use this feature, you need to provide a MongoDB connection URI.
+
+If you don't want to use this feature, you can set `mongoUri` to `undefined`. The return object of `post` functions will contain the article and the tweet/poll object returned by the Twitter API. You can use this object to update your custom database.
+
 ## Rettiwt API Integration
 
 This package uses the [rettiwt-api](https://www.npmjs.com/package/rettiwt-api) for free access to Twitter API functionality. To generate a rettiwt API key, follow the instructions provided in the rettiwt-api documentation.

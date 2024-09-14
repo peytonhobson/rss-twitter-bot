@@ -29,25 +29,16 @@ export class RSSService implements IRSSService {
   constructor(readonly params: RSSServiceParams) {
 
     const {
-      openaiApiKey,
-      twitterTokens,
-      rettiwtApiKey,
       rssFeeds,
       enableDebug = false
     } = params
 
     this.#mongoService = new MongoService(params)
+    this.#twitterService = new TwitterService(params)
+    this.#openAIService = new OpenAIService(params)
 
     this.#rssFeeds = rssFeeds
     this.#enableDebug = enableDebug
-
-    this.#twitterService = new TwitterService({
-      twitterTokens,
-      rettiwtApiKey
-    })
-    this.#openAIService = new OpenAIService({
-      openaiApiKey
-    })
   }
 
   async postArticleTweet({
@@ -81,14 +72,15 @@ export class RSSService implements IRSSService {
     // TODO: Make this available to rettiwt or twitter service
     const postedTweet = await this.#twitterService.postTweet(tweet)
 
-    if (this.#enableDebug) {
-      console.log('Posted tweet:', postedTweet)
-    }
-
     await this.#markArticleAsPosted({
       ...oldestUnpublishedArticle,
       postType: 'tweet'
     })
+
+    return {
+      article: oldestUnpublishedArticle,
+      tweet: postedTweet
+    }
   }
 
   async postArticleThread({
@@ -119,7 +111,7 @@ export class RSSService implements IRSSService {
       content: threadContent
     })
 
-    // TODO: Separate function
+    // TODO: Separate function + custom split function
     /* Split tweets by line that starts with a number to ensure 
        each tweet is a separate tweet */
     const tweets = generatedContent
@@ -131,14 +123,15 @@ export class RSSService implements IRSSService {
     // TODO: Make this available to rettiwt or twitter service
     const postedThread = await this.#twitterService.postThread(tweets)
 
-    if (this.#enableDebug) {
-      console.log('Posted thread:', postedThread)
-    }
-
     await this.#markArticleAsPosted({
       ...oldestUnpublishedArticle,
       postType: 'thread'
     })
+
+    return {
+      article: oldestUnpublishedArticle,
+      tweets: postedThread
+    }
   }
 
   async postArticlePoll({
@@ -173,14 +166,15 @@ export class RSSService implements IRSSService {
     // TODO: Make this available to rettiwt or twitter service
     const postedPoll = await this.#twitterService.postPoll(pollData)
 
-    if (this.#enableDebug) {
-      console.log('Posted poll:', postedPoll)
-    }
-
     await this.#markArticleAsPosted({
       ...oldestUnpublishedArticle,
       postType: 'poll'
     })
+
+    return {
+      article: oldestUnpublishedArticle,
+      poll: postedPoll
+    }
   }
 
   /**

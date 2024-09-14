@@ -1,3 +1,5 @@
+import type { TweetV2PostTweetResult } from 'twitter-api-v2'
+
 /**
  * Interface for Twitter service operations
  */
@@ -6,13 +8,13 @@ export interface ITwitterService {
    * Posts a single tweet
    * @param tweet - The content of the tweet
    */
-  postTweet(tweet: string): Promise<string | undefined>
+  postTweet(tweet: string): Promise<TweetV2PostTweetResult | undefined>
 
   /**
    * Posts a thread of tweets
    * @param tweets - An array of tweet contents
    */
-  postThread(tweets: string[]): Promise<string | undefined>
+  postThread(tweets: string[]): Promise<TweetV2PostTweetResult[] | undefined>
 
   /**
    * Posts a poll tweet
@@ -24,5 +26,5 @@ export interface ITwitterService {
     question: string
     content: string
     options: string[]
-  }): Promise<string | undefined>
+  }): Promise<unknown | undefined>
 }

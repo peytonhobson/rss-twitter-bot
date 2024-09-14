@@ -1,5 +1,11 @@
 # rss-twitter-bot
 
+## 0.1.7
+
+### Patch Changes
+
+- Added return object, including article and tweet response for personal DB use.
+
 ## 0.1.6
 
 ### Patch Changes
