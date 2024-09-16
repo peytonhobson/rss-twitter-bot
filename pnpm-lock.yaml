@@ -20,6 +20,9 @@ importers:
       openai:
         specifier: ^4.56.0
         version: 4.56.0(zod@3.23.8)
+      rettiwt-api:
+        specifier: ^4.1.1
+        version: 4.1.1
       rettiwt-auth:
         specifier: ^2.1.0
         version: 2.1.0
@@ -702,6 +705,9 @@ packages:
   '@types/semver@7.5.8':
     resolution: {integrity: sha512-I8EUhyrgfLrcTkzV3TSsGyl1tSuPrEDzr0yd5m90UgNxQkyDXULk3b6MlQqTCpZpNtWe1K0hzclnZkTcLBe2UQ==}
 
+  '@types/validator@13.12.2':
+    resolution: {integrity: sha512-6SlHBzUW8Jhf3liqrGGXyTJSIFe4nqlJ5A5KaMZ2l/vbM3Wh3KSybots/wfWVzNLK4D1NZluDlSQIbIEPx6oyA==}
+
   '@types/webidl-conversions@7.0.3':
     resolution: {integrity: sha512-CiJJvcRtIgzadHCYXw7dqEnMNRjhGZlYK05Mj9OyktqV8uVT8fD2BFOB7S1uwBE3Kj2Z+4UyPmFw/Ixgw/LAlA==}
 
@@ -971,6 +977,9 @@ packages:
   ci-info@3.9.0:
     resolution: {integrity: sha512-NIxF55hv4nSqQswkAeiOi1r83xy8JldOFDTWiug55KBu9Jnblncd2U6ViHmYgHf01TPZS77NJBhBMKdWj9HQMQ==}
     engines: {node: '>=8'}
+
+  class-validator@0.14.1:
+    resolution: {integrity: sha512-2VEG9JICxIqTpoK1eMzZqaV+u/EiwEJkMGzTrZf6sU/fwsnOITVgYJ8yojSy6CaXtO9V0Cc6ZQZ8h8m4UBuLwQ==}
 
   clear-module@4.1.2:
     resolution: {integrity: sha512-LWAxzHqdHsAZlPlEyJ2Poz6AIs384mPeqLVCru2p0BrP9G/kVGuhNyZYClLO6cXlnuJjzC8xtsJIuMjKqLXoAw==}
@@ -1841,6 +1850,9 @@ packages:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
 
+  libphonenumber-js@1.11.8:
+    resolution: {integrity: sha512-0fv/YKpJBAgXKy0kaS3fnqoUVN8901vUYAKIGD/MWZaDfhJt1nZjPL3ZzdZBt/G8G8Hw2J1xOIrXWdNHFHPAvg==}
+
   lines-and-columns@1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
 
@@ -2218,9 +2230,17 @@ packages:
     resolution: {integrity: sha512-l+sSefzHpj5qimhFSE5a8nufZYAM3sBSVMAPtYkmC+4EH2anSGaEMXSD0izRQbu9nfyQ9y5JrVmp7E8oZrUjvA==}
     engines: {node: '>=8'}
 
+  rettiwt-api@4.1.1:
+    resolution: {integrity: sha512-sChKTQ3fznCNN9xoB8xJZw5w6O0J9yRY0egEo3Hcig/WsuAHLR8QgWeoNSV8iwn896IuzZEIFmtwoERGZvpeVw==}
+    hasBin: true
+
   rettiwt-auth@2.1.0:
     resolution: {integrity: sha512-N3G1kX/4TFYvUumxcACHO9ngVnhM+DhpuRn2/JxWlgHuztAQShbO9ux3hfMducCqzzjdcMLPJhrEDt9fwSbpaQ==}
     hasBin: true
+
+  rettiwt-core@4.3.0:
+    resolution: {integrity: sha512-oT+TZTFNTyQfllda9qBWdfe6K16D+m0YLo1AqXTyHpK4NgckHqFegeQAS7LDA4OGekqFtufYFN6ugnDw8T2Cbw==}
+    engines: {node: ^20.11.1}
 
   reusify@1.0.4:
     resolution: {integrity: sha512-U9nH88a3fc/ekCF1l0/UP1IosiuIjyTh7hBvXVMHYgVcfGvt897Xguj2UOLDeI5BG2m7/uwyaLVT6fbtCwTyzw==}
@@ -2500,6 +2520,10 @@ packages:
 
   validate-npm-package-license@3.0.4:
     resolution: {integrity: sha512-DpKm2Ui/xN7/HQKCtpZxoRWBhZ9Z0kqtygG8XCgNQ8ZlDnxuQmWhj566j8fN4Cu3/JmbhsDo7fcAJq4s9h27Ew==}
+
+  validator@13.12.0:
+    resolution: {integrity: sha512-c1Q0mCiPlgdTVVVIJIrBuxNicYE+t/7oKeI9MWLj3fh/uq2Pxh/3eeWbVZ4OcGW1TUf53At0njHw5SMdA3tmMg==}
+    engines: {node: '>= 0.10'}
 
   vlq@0.2.3:
     resolution: {integrity: sha512-DRibZL6DsNhIgYQ+wNdWDL2SL3bKPlVrRiBqV5yuMm++op8W4kGFtaQfCs4KEJn0wBZcHVHJ3eoywX8983k1ow==}
@@ -3360,6 +3384,8 @@ snapshots:
 
   '@types/semver@7.5.8': {}
 
+  '@types/validator@13.12.2': {}
+
   '@types/webidl-conversions@7.0.3': {}
 
   '@types/whatwg-url@11.0.5':
@@ -3700,6 +3726,12 @@ snapshots:
   chardet@0.7.0: {}
 
   ci-info@3.9.0: {}
+
+  class-validator@0.14.1:
+    dependencies:
+      '@types/validator': 13.12.2
+      libphonenumber-js: 1.11.8
+      validator: 13.12.0
 
   clear-module@4.1.2:
     dependencies:
@@ -4719,6 +4751,8 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
+  libphonenumber-js@1.11.8: {}
+
   lines-and-columns@1.2.4: {}
 
   locate-path@5.0.0:
@@ -5066,6 +5100,19 @@ snapshots:
       onetime: 5.1.2
       signal-exit: 3.0.7
 
+  rettiwt-api@4.1.1:
+    dependencies:
+      axios: 1.6.3
+      chalk: 4.1.2
+      class-validator: 0.14.1
+      commander: 11.1.0
+      https-proxy-agent: 7.0.2
+      rettiwt-auth: 2.1.0
+      rettiwt-core: 4.3.0
+    transitivePeerDependencies:
+      - debug
+      - supports-color
+
   rettiwt-auth@2.1.0:
     dependencies:
       axios: 1.6.3
@@ -5075,6 +5122,13 @@ snapshots:
     transitivePeerDependencies:
       - debug
       - supports-color
+
+  rettiwt-core@4.3.0:
+    dependencies:
+      axios: 1.6.3
+      form-data: 4.0.0
+    transitivePeerDependencies:
+      - debug
 
   reusify@1.0.4: {}
 
@@ -5401,6 +5455,8 @@ snapshots:
     dependencies:
       spdx-correct: 3.2.0
       spdx-expression-parse: 3.0.1
+
+  validator@13.12.0: {}
 
   vlq@0.2.3: {}
 

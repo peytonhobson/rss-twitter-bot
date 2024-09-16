@@ -1,11 +1,6 @@
-/* eslint-disable prettier/prettier */
 import { TwitterApi } from 'twitter-api-v2'
-import { r } from '@crossingminds/utils'
-import {
-  getPollCardDataConfig,
-  getPollTweetConfig
-} from '../../utils/pollConfig'
-import { CustomTweetService } from './CustomTweetService'
+import { Rettiwt } from 'rettiwt-api'
+import { runSafeAsync } from '@crossingminds/utils'
 import type { TwitterApiTokens } from 'twitter-api-v2'
 import type { ITwitterService } from './interfaces/ITwitterService'
 
@@ -17,13 +12,13 @@ export interface TwitterServiceParams {
 
 export class TwitterService implements ITwitterService {
   readonly #twitterClient: TwitterApi
-  readonly #customTweetService: CustomTweetService | undefined
+  readonly #rettiwtClient: Rettiwt | undefined
   readonly #enableDebug: boolean = false
 
   constructor(readonly params: TwitterServiceParams) {
     this.#twitterClient = new TwitterApi(params.twitterTokens)
     if (params.rettiwtApiKey) {
-      this.#customTweetService = new CustomTweetService({
+      this.#rettiwtClient = new Rettiwt({
         apiKey: params.rettiwtApiKey
       })
     }
@@ -36,7 +31,7 @@ export class TwitterService implements ITwitterService {
       const postedTweet = await this.#twitterClient.v2.tweet(tweet)
 
       if (this.#enableDebug) {
-      const tweetMessage = postedTweet.data.text
+        const tweetMessage = postedTweet.data.text
 
         console.log('Posted tweet:', tweetMessage)
       }
@@ -56,7 +51,7 @@ export class TwitterService implements ITwitterService {
       if (this.#enableDebug) {
         const tweetMessage = postedTweet
           .map(tweet => tweet.data.text)
-        .join('\n\n')
+          .join('\n\n')
 
         console.log('Posted tweet:', tweetMessage)
       }
@@ -78,31 +73,100 @@ export class TwitterService implements ITwitterService {
     content: string
     options: string[]
   }) {
-    if (this.#customTweetService === undefined) {
-      console.error('Polls cannot be created with a rettiwt API key.')
+    try {
+      const postedTweet = await this.#twitterClient.v2.tweet({
+        text: `${question}\n\n${content}`,
+        poll: {
+          duration_minutes: 1440,
+          options
+        }
+      })
 
-      return
+      return postedTweet
+    } catch (error) {
+      console.error('Error posting poll:', error)
+
+      return undefined
+    }
+  }
+
+  async postReply(tweetId: string, reply: string) {
+    try {
+      // TODO: Use Rettiwt instead of Twitter API v2 if available
+      const postedTweet = await this.#twitterClient.v2.reply(tweetId, reply)
+
+      return postedTweet
+    } catch (error) {
+      console.error('Error posting reply:', error)
+
+      return undefined
+    }
+  }
+
+  async getUserId(username: string) {
+    const {
+      value: userId,
+      hasError,
+      error
+    } = await runSafeAsync(async () => {
+      if (this.#rettiwtClient) {
+        return (await this.#rettiwtClient.user.details(username))?.id
+      }
+
+      if (this.#enableDebug) {
+        console.log('Getting user id with Twitter API v2')
+      }
+
+      /* Use Twitter API v2 instead of Rettiwt if rettiwt api key is not provided.
+         This will throw an error if the twitter api plan is not Pro or higher. */
+      return (await this.#twitterClient.v2.userByUsername(username)).data.id
+    })
+
+    if (hasError) {
+      console.error('Error getting user id:', error)
     }
 
-    /* A card uri is needed to generate a poll */
-    const cardData = await this.#customTweetService.request(
-      getPollCardDataConfig(options)
-    )
+    return userId
+  }
 
-    const cardUri = r.object(cardData, ({ card_uri }) => r.string(card_uri))
+  async getUserTimeline(
+    userId: string,
+    params: { count?: number; exclude?: ('retweets' | 'replies')[] }
+  ) {
+    const {
+      value: timeline,
+      hasError,
+      error
+    } = await runSafeAsync(async () => {
+      if (this.#rettiwtClient) {
+        const { list } = await this.#rettiwtClient.user.timeline(
+          userId,
+          params.count
+        )
 
-    if (cardUri === undefined) {
-      console.error('Error parsing cardUri')
+        if (params.exclude?.includes('retweets')) {
+          return list.filter(tweet => !tweet.retweetedTweet)
+        }
 
-      return
+        return list
+      }
+
+      if (this.#enableDebug) {
+        console.log('Getting user timeline with Twitter API v2')
+      }
+
+      return (
+        await this.#twitterClient.v2.userTimeline(userId, {
+          ...(params.count ? { max_results: params.count } : {}),
+          ...(params.exclude ? { exclude: params.exclude } : {})
+        })
+      ).tweets
+    })
+
+    if (hasError) {
+      console.error('Error getting user timeline:', error)
     }
 
-    /* The free twitter api does not support polls, so we need to use the custom tweet service */
-    const postedTweet = await this.#customTweetService.request(
-      getPollTweetConfig({ text: `${question}\n\n${content}`, cardUri })
-    )
-
-    // TODO: Type validation
-    return postedTweet
+    return timeline
   }
 }

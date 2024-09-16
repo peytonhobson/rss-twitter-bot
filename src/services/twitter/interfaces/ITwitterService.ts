@@ -26,5 +26,5 @@ export interface ITwitterService {
     question: string
     content: string
     options: string[]
-  }): Promise<unknown | undefined>
+  }): Promise<TweetV2PostTweetResult | undefined>
 }

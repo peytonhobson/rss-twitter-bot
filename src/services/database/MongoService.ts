@@ -39,6 +39,7 @@ export class MongoService implements IMongoService {
 
       await this.#client.connect()
 
+      // TODO: Create db if it doesn't exist
       this.#db = this.#client.db(this.#dbName)
     } catch (error) {
       console.error('Error connecting to MongoDB:', error)
