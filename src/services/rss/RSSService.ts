@@ -77,6 +77,8 @@ export class RSSService implements IRSSService {
       postType: 'tweet'
     })
 
+    await this.#mongoService.disconnect()
+
     return {
       article: oldestUnpublishedArticle,
       tweet: postedTweet
@@ -128,6 +130,8 @@ export class RSSService implements IRSSService {
       postType: 'thread'
     })
 
+    await this.#mongoService.disconnect()
+
     return {
       article: oldestUnpublishedArticle,
       tweets: postedThread
@@ -170,6 +174,8 @@ export class RSSService implements IRSSService {
       ...oldestUnpublishedArticle,
       postType: 'poll'
     })
+
+    await this.#mongoService.disconnect()
 
     return {
       article: oldestUnpublishedArticle,
