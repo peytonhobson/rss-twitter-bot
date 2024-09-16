@@ -1,5 +1,11 @@
 # rss-twitter-bot
 
+## 0.1.9
+
+### Patch Changes
+
+- Appended article link and twitter handle to threads if not already present.
+
 ## 0.1.8
 
 ### Patch Changes

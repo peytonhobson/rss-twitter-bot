@@ -116,11 +116,22 @@ export class RSSService implements IRSSService {
     // TODO: Separate function + custom split function
     /* Split tweets by line that starts with a number to ensure 
        each tweet is a separate tweet */
-    const tweets = generatedContent
+    let tweets = generatedContent
       .split(/(?=\n\d+\/)/)
       .map(tweet =>
         tweet.trim().replaceAll('[Article Link]', oldestUnpublishedArticle.link)
       )
+
+    // Check if any tweets contain the article link
+    const tweetContainLink = tweets.some(tweet => tweet.includes(oldestUnpublishedArticle.link))
+
+    if (!tweetContainLink) {
+      tweets = [...tweets, `
+        Read More: ${oldestUnpublishedArticle.link}
+        
+        ${oldestUnpublishedArticle.twitterHandle ? `@${oldestUnpublishedArticle.twitterHandle}` : ''}
+        `]
+    }
 
     // TODO: Make this available to rettiwt or twitter service
     const postedThread = await this.#twitterService.postThread(tweets)
