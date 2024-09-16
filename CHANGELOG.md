@@ -1,5 +1,11 @@
 # rss-twitter-bot
 
+## 0.1.8
+
+### Patch Changes
+
+- Added disconnect from db service.
+
 ## 0.1.7
 
 ### Patch Changes
