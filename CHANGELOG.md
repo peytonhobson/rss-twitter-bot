@@ -1,5 +1,11 @@
 # rss-twitter-bot
 
+## 0.1.11
+
+### Patch Changes
+
+- Fixed issue where poll params weren't be sanitized properly.
+
 ## 0.1.10
 
 ### Patch Changes
