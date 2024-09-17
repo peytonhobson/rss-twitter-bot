@@ -65,7 +65,7 @@ export function getLLMPollParameters(content: string) {
           return {
             question: r.required(r.string(question)),
             content: r.required(r.string(tweetContent)),
-            options: r.required(r.array(options, r.string))
+            options: r.required(r.array(options, option => r.string(option)))
           }
         })
       )
