@@ -17,22 +17,13 @@ export type Article = {
 export function validateArticle(item: unknown): Article | undefined {
   return r.object(
     item,
-    ({
-      pubDate,
-      link,
-      content,
-      contentSnippet,
-      title,
-      twitterHandle,
-      ...rest
-    }) => ({
+    ({ pubDate, link, content, contentSnippet, title, twitterHandle }) => ({
       pubDate: r.required(r.string(pubDate)),
       link: r.required(r.string(link)),
       content: r.required(r.string(content)),
       contentSnippet: r.required(r.string(contentSnippet)),
       title: r.required(r.string(title)),
-      twitterHandle: r.string(twitterHandle),
-      ...rest
+      twitterHandle: r.string(twitterHandle)
     })
   )
 }

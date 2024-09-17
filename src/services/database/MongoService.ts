@@ -3,7 +3,8 @@ import type {
   Db,
   Filter,
   Document as MongoDocument,
-  OptionalUnlessRequiredId
+  OptionalUnlessRequiredId,
+  Sort
 } from 'mongodb'
 import type { IMongoService } from './interfaces/IMongoService'
 
@@ -105,14 +106,33 @@ export class MongoService implements IMongoService {
 
   async find<T extends MongoDocument>(
     collectionName: string,
-    query: Filter<T>
+    query: Filter<T> = {},
+    options: {
+      limit?: number
+      sort?: Sort
+    } = {}
   ) {
     const collection = this.#getCollection<T>(collectionName)
 
     if (!collection) {
+      console.log('Collection not found')
       return undefined
     }
 
-    return await collection.find(query).toArray()
+    const { limit, sort } = options
+
+    const cursor = collection.find(query)
+
+    if (sort) {
+      cursor.sort(sort)
+    }
+
+    if (limit) {
+      cursor.limit(limit)
+    }
+
+    const results = await cursor.toArray()
+
+    return results
   }
 }

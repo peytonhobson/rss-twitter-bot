@@ -128,7 +128,6 @@ export class RSSService implements IRSSService {
     if (!tweetContainLink) {
       tweets = [...tweets, `
         Read More: ${oldestUnpublishedArticle.link}
-        
         ${oldestUnpublishedArticle.twitterHandle ? `@${oldestUnpublishedArticle.twitterHandle}` : ''}
         `]
     }
@@ -318,10 +317,11 @@ export class RSSService implements IRSSService {
   async findLatestPostedArticles(limit: number): Promise<PostedArticle[]> {
     await this.#mongoService.connect()
 
-    const articles = await this.#mongoService.find<Article>(POSTED_ARTICLE_COLLECTION_NAME, {
-      limit,
-      sort: { _id: -1 }
-    })
+    const articles = await this.#mongoService.find<PostedArticle>(
+    POSTED_ARTICLE_COLLECTION_NAME,
+    undefined,
+    { limit, sort: { _id: -1 } } 
+  )
 
     return articles?.map(validatePostedArticle).filter(article => article !== undefined) ?? []
   }
