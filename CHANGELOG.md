@@ -1,5 +1,11 @@
 # rss-twitter-bot
 
+## 0.1.12
+
+### Patch Changes
+
+- Bump for publish
+
 ## 0.1.11
 
 ### Patch Changes
