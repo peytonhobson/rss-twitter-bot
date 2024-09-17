@@ -1,5 +1,11 @@
 # rss-twitter-bot
 
+## 0.1.10
+
+### Patch Changes
+
+- Fixed issue where using the "find" method on the dbService would always return an empty array.
+
 ## 0.1.9
 
 ### Patch Changes
