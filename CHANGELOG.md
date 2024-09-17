@@ -1,5 +1,11 @@
 # rss-twitter-bot
 
+## 0.1.13
+
+### Patch Changes
+
+- Adapted `postPoll` to use twitter API.
+
 ## 0.1.12
 
 ### Patch Changes
