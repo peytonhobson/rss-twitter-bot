@@ -1,5 +1,11 @@
 # rss-twitter-bot
 
+## 0.1.10
+
+### Patch Changes
+
+- Fixed an issue where finding multiple documents in a db would always return an empty array.
+
 ## 0.1.9
 
 ### Patch Changes
