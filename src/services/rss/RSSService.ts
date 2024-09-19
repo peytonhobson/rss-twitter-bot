@@ -73,7 +73,8 @@ export class RSSService implements IRSSService {
 
     await this.#markArticleAsPosted({
       ...oldestUnpublishedArticle,
-      postType: 'tweet'
+      postType: 'tweet',
+      createdAt: new Date()
     })
 
     await this.#mongoService.disconnect()
@@ -132,7 +133,8 @@ export class RSSService implements IRSSService {
 
     await this.#markArticleAsPosted({
       ...oldestUnpublishedArticle,
-      postType: 'thread'
+      postType: 'thread',
+      createdAt: new Date()
     })
 
     await this.#mongoService.disconnect()
@@ -187,7 +189,8 @@ export class RSSService implements IRSSService {
 
     await this.#markArticleAsPosted({
       ...oldestUnpublishedArticle,
-      postType: 'poll'
+      postType: 'poll',
+      createdAt: new Date()
     })
 
     await this.#mongoService.disconnect()

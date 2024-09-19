@@ -1,5 +1,11 @@
 # rss-twitter-bot
 
+## 0.1.15
+
+### Patch Changes
+
+- Added `createdAt` field to posted articles.
+
 ## 0.1.14
 
 ### Patch Changes

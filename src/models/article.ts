@@ -41,13 +41,15 @@ const POST_TYPES = ['thread', 'poll', 'tweet'] as const
 
 export type PostedArticle = Article & {
   postType: (typeof POST_TYPES)[number]
+  createdAt: Date
 }
 
 export function validatePostedArticle(
   article: unknown
 ): PostedArticle | undefined {
-  return r.object(article, ({ postType, ...rest }) => ({
+  return r.object(article, ({ postType, createdAt, ...rest }) => ({
     ...r.required(validateArticle(rest)),
-    postType: r.required(r.oneOf(postType, POST_TYPES))
+    postType: r.required(r.oneOf(postType, POST_TYPES)),
+    createdAt: r.required(r.date(createdAt))
   }))
 }

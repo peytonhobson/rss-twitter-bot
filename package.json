@@ -1,6 +1,6 @@
 {
   "name": "rss-twitter-bot",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "",
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
