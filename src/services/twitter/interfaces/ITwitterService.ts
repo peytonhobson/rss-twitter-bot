@@ -23,8 +23,7 @@ export interface ITwitterService {
    * @param pollData.options - The poll options (2-4 options)
    */
   postPoll(pollData: {
-    question: string
-    content: string
+    tweet: string
     options: string[]
   }): Promise<unknown | undefined>
 }

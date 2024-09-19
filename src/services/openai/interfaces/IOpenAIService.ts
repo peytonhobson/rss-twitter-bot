@@ -36,7 +36,7 @@ export interface IOpenAIService {
     model?: string
     temperature?: number
     sanitize: (data: unknown) => T
-  }): Promise<T>
+  }): Promise<T | undefined>
 
   // /**
   //  * Generates hashtags for a given text.

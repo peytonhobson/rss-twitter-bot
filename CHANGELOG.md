@@ -1,5 +1,11 @@
 # rss-twitter-bot
 
+## 0.1.14
+
+### Patch Changes
+
+- Fixed issues with polling and reduced poll content parameter to single `tweet` param.
+
 ## 0.1.13
 
 ### Patch Changes

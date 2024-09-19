@@ -1,4 +1,5 @@
 import OpenAI from 'openai'
+import { runSafe } from '@crossingminds/utils'
 import type { ChatCompletionTool } from 'openai/resources'
 import type { IOpenAIService } from './interfaces/IOpenAIService'
 
@@ -38,7 +39,7 @@ export class OpenAIService implements IOpenAIService {
     model?: string
     temperature?: number
     sanitize: (data: unknown) => T
-  }): Promise<T> {
+  }): Promise<T | undefined> {
     const { content, tools, model = 'gpt-4o', temperature, sanitize } = params
 
     const response = await this.#openaiClient.chat.completions.create({
@@ -56,8 +57,20 @@ export class OpenAIService implements IOpenAIService {
       throw new Error('No arguments in the response')
     }
 
+    const { value: parsedFunctionCallArguments, error } = runSafe(() => {
+      return JSON.parse(functionCallArguments)
+    })
+
+    if (error) {
+      console.error('Error parsing function call arguments:', error)
+
+      return undefined
+    }
+
     return typeof sanitize === 'function'
-      ? sanitize(JSON.parse(functionCallArguments))
-      : JSON.parse(functionCallArguments)
+      ? sanitize(
+          parsedFunctionCallArguments?.parameters ?? parsedFunctionCallArguments
+        )
+      : (parsedFunctionCallArguments?.parameters ?? parsedFunctionCallArguments)
   }
 }

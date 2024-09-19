@@ -14,31 +14,18 @@ export function getLLMPollParameters(content: string) {
         type: 'function',
         function: {
           name: 'generate_poll',
-          description: 'Generate a poll question, content, and four options',
+          description: `For a twitter poll, generate a tweet starting with a question
+          that is engaging and relevant to the topic along with information about the provided article. Then, generate two to four possible
+          poll options that are under 25 characters each.`,
           parameters: {
             type: 'object',
             properties: {
               parameters: {
                 type: 'object',
                 properties: {
-                  question: {
+                  tweet: {
                     type: 'string',
-                    description:
-                      'The poll question that is engaging and relevant to the topic.',
-                    maxLength: 100
-                  },
-                  content: {
-                    type: 'string',
-                    description: `A comment about the article that is engaging and relevant to the topic, as well as the article title, link, and twitter handle.
-                
-
-                ###Format###
-
-                {comment}
-
-                Read More: {link}
-                @{twitterHandle}
-                `
+                    description: `The poll tweet that is engaging and relevant to the topic. This should start with a question that is engaging and relevant to the topic. It should also include information about the provided article.`
                   },
                   options: {
                     type: 'array',
@@ -49,26 +36,27 @@ export function getLLMPollParameters(content: string) {
                     minItems: 2,
                     maxItems: 4,
                     description:
-                      'Four possible poll options that are under 25 characters each'
+                      'Two to four possible poll options that are under 25 characters each'
                   }
                 },
-                required: ['question', 'options']
+                required: ['tweet', 'options']
               }
             }
           }
         }
       }
     ],
-    sanitize: (data: unknown) =>
-      r.required(
-        r.object(data, ({ question, content: tweetContent, options }) => {
+    sanitize: (data: unknown) => {
+      console.log('Sanitizing data:', data)
+      return r.required(
+        r.object(data, ({ tweet, options }) => {
           return {
-            question: r.required(r.string(question)),
-            content: r.required(r.string(tweetContent)),
+            tweet: r.required(r.string(tweet)),
             options: r.required(r.array(options, option => r.string(option)))
           }
         })
       )
+    }
   } as const satisfies Parameters<
     typeof OpenAIService.prototype.getStructuredOutput
   >[0]

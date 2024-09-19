@@ -55,18 +55,10 @@ export class TwitterService implements ITwitterService {
     }
   }
 
-  async postPoll({
-    question,
-    content,
-    options
-  }: {
-    question: string
-    content: string
-    options: string[]
-  }) {
+  async postPoll({ tweet, options }: { tweet: string; options: string[] }) {
     try {
       const postedTweet = await this.#twitterClient.v2.tweet({
-        text: `${question}\n\n${content}`,
+        text: tweet,
         poll: {
           duration_minutes: 1440,
           options

@@ -69,7 +69,6 @@ export class RSSService implements IRSSService {
       content: tweetContent
     })
 
-    // TODO: Make this available to rettiwt or twitter service
     const postedTweet = await this.#twitterService.postTweet(tweet)
 
     await this.#markArticleAsPosted({
@@ -126,13 +125,9 @@ export class RSSService implements IRSSService {
     const tweetContainLink = tweets.some(tweet => tweet.includes(oldestUnpublishedArticle.link))
 
     if (!tweetContainLink) {
-      tweets = [...tweets, `
-        Read More: ${oldestUnpublishedArticle.link}
-        ${oldestUnpublishedArticle.twitterHandle ? `@${oldestUnpublishedArticle.twitterHandle}` : ''}
-        `]
+      tweets = [...tweets, `Read More: ${oldestUnpublishedArticle.link}\n${oldestUnpublishedArticle.twitterHandle ? `@${oldestUnpublishedArticle.twitterHandle}` : ''}`]
     }
 
-    // TODO: Make this available to rettiwt or twitter service
     const postedThread = await this.#twitterService.postThread(tweets)
 
     await this.#markArticleAsPosted({
@@ -177,8 +172,18 @@ export class RSSService implements IRSSService {
     const pollData =
       await this.#openAIService.getStructuredOutput(llmPollParameters)
 
-    // TODO: Make this available to rettiwt or twitter service
-    const postedPoll = await this.#twitterService.postPoll(pollData)
+    if (!pollData) {
+      console.log('No poll data generated')
+
+      return
+    }
+
+    const pollDataWithLinks = {
+      ...pollData,
+      tweet: `${pollData.tweet}\n\nRead More: ${oldestUnpublishedArticle.link}\n${oldestUnpublishedArticle.twitterHandle ? `@${oldestUnpublishedArticle.twitterHandle}` : ''}`
+    }
+
+    const postedPoll = await this.#twitterService.postPoll(pollDataWithLinks)
 
     await this.#markArticleAsPosted({
       ...oldestUnpublishedArticle,
