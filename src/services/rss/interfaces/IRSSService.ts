@@ -10,13 +10,13 @@ export interface IRSSService {
    * Posts a tweet about the oldest unpublished article from the RSS feeds
    * @param params - Configuration for the tweet post
    * @param params.getPrompt - Function to generate the tweet content from an article
-   * @param params.earliestPublishDate - Optional. The earliest publication date to consider for articles
    * @param params.customArticleFilter - Optional. Custom function to filter articles
+   * @param params.fetchCustomArticles - Optional. Custom function to fetch additional articles
    */
   postArticleTweet(params: {
     getPrompt: (article: Article) => string
-    earliestPublishDate?: Date
     customArticleFilter?: (article: Article) => boolean
+    fetchCustomArticles?: () => Promise<Article[]>
   }): Promise<
     | {
         article: Article
@@ -29,13 +29,13 @@ export interface IRSSService {
    * Posts a thread about the oldest unpublished article from the RSS feeds
    * @param params - Configuration for the thread post
    * @param params.getPrompt - Function to generate the thread content from an article
-   * @param params.earliestPublishDate - Optional. The earliest publication date to consider for articles
    * @param params.customArticleFilter - Optional. Custom function to filter articles
+   * @param params.fetchCustomArticles - Optional. Custom function to fetch additional articles
    */
   postArticleThread(params: {
     getPrompt: (article: Article) => string
-    earliestPublishDate?: Date
     customArticleFilter?: (article: Article) => boolean
+    fetchCustomArticles?: () => Promise<Article[]>
   }): Promise<
     | {
         article: Article
@@ -48,13 +48,13 @@ export interface IRSSService {
    * Posts a poll about the oldest unpublished article from the RSS feeds
    * @param params - Configuration for the poll post
    * @param params.getPrompt - Function to generate the poll content from an article
-   * @param params.earliestPublishDate - Optional. The earliest publication date to consider for articles
    * @param params.customArticleFilter - Optional. Custom function to filter articles
+   * @param params.fetchCustomArticles - Optional. Custom function to fetch additional articles
    */
   postArticlePoll(params: {
     getPrompt: (article: Article) => string
-    earliestPublishDate?: Date
     customArticleFilter?: (article: Article) => boolean
+    fetchCustomArticles?: () => Promise<Article[]>
   }): Promise<
     | {
         article: Article

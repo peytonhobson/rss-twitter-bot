@@ -1,5 +1,11 @@
 # rss-twitter-bot
 
+## 0.2.0
+
+### Minor Changes
+
+- Added function to fetch additional custom articles.
+
 ## 0.1.16
 
 ### Patch Changes

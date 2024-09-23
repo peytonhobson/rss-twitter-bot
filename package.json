@@ -1,6 +1,6 @@
 {
   "name": "rss-twitter-bot",
-  "version": "0.1.16",
+  "version": "0.2.0",
   "description": "",
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -15,7 +15,8 @@
     "build-types": "tsc",
     "build-esm": "esbuild ./src --platform=node --bundle --target=es2022 --format=esm --sourcemap=external --packages=external --outfile=./dist/index.mjs",
     "build-cjs": "esbuild ./src --platform=node --bundle --target=es2022 --format=cjs --sourcemap=external --packages=external --outfile=./dist/index.cjs",
-    "preflight": "eslint './src/**' && unimported && ts-unused-exports ./tsconfig.json --excludePathsFromReport=src/index.ts && cspell --no-cache --no-progress './src/**/*.{ts,tsx}'"
+    "preflight": "eslint './src/**' && unimported && ts-unused-exports ./tsconfig.json --excludePathsFromReport=src/index.ts && cspell --no-cache --no-progress './src/**/*.{ts,tsx}'",
+    "release": "pnpm build && pnpm publish"
   },
   "keywords": [],
   "author": "",
@@ -35,7 +36,7 @@
     "esbuild": "^0.23.1",
     "eslint": "^8.10.0",
     "ts-unused-exports": "^10.1.0",
-    "typescript": "^5.5.4",
+    "typescript": "^5.6.2",
     "unimported": "^1.31.1"
   }
 }

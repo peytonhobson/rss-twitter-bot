@@ -43,25 +43,22 @@ export class RSSService implements IRSSService {
 
   async postArticleTweet({
     getPrompt,
-    customArticleFilter
+    customArticleFilter,
+    fetchCustomArticles
   }: {
     getPrompt: (article: Article) => string
-    customArticleFilter?: ((article: Article) => boolean) | undefined
+    customArticleFilter?: ((article: Article) => boolean) | undefined,
+    fetchCustomArticles?: () => Promise<Article[]>
   }) {
     await this.#mongoService.connect()
 
-    const articles = await fetchArticles(this.#rssFeeds, customArticleFilter)
-
     const oldestUnpublishedArticle =
-      await this.#getOldestUnpublishedArticle(articles)
+      await this.#getOldestUnpublishedArticle({
+        customArticleFilter,
+        fetchCustomArticles
+      })
 
-    if (!oldestUnpublishedArticle) {
-      if (this.#enableDebug) {
-        console.log('No matching articles found.')
-      }
-
-      return
-    }
+    if (oldestUnpublishedArticle === undefined) return undefined
 
     const tweetContent = getPrompt(oldestUnpublishedArticle)
 
@@ -87,25 +84,22 @@ export class RSSService implements IRSSService {
 
   async postArticleThread({
     getPrompt,
-    customArticleFilter
+    customArticleFilter,
+    fetchCustomArticles
   }: {
     getPrompt: (article: Article) => string
     customArticleFilter?: ((article: Article) => boolean) | undefined
+    fetchCustomArticles?: () => Promise<Article[]>
   }) {
    await this.#mongoService.connect()
 
-    const articles = await fetchArticles(this.#rssFeeds, customArticleFilter)
-
     const oldestUnpublishedArticle =
-      await this.#getOldestUnpublishedArticle(articles)
+      await this.#getOldestUnpublishedArticle({
+        customArticleFilter,
+        fetchCustomArticles
+      })
 
-    if (!oldestUnpublishedArticle) {
-      if (this.#enableDebug) {
-        console.log('No matching articles found.')
-      }
-
-      return
-    }
+    if (oldestUnpublishedArticle === undefined) return undefined
 
     const threadContent = getPrompt(oldestUnpublishedArticle)
 
@@ -147,25 +141,22 @@ export class RSSService implements IRSSService {
 
   async postArticlePoll({
     getPrompt,
-    customArticleFilter
+    customArticleFilter,
+    fetchCustomArticles
   }: {
     getPrompt: (article: Article) => string
     customArticleFilter?: ((article: Article) => boolean) | undefined
+    fetchCustomArticles?: () => Promise<Article[]>
   }) {
     await this.#mongoService.connect()
 
-    const articles = await fetchArticles(this.#rssFeeds, customArticleFilter)
-
     const oldestUnpublishedArticle =
-      await this.#getOldestUnpublishedArticle(articles)
+      await this.#getOldestUnpublishedArticle({
+        customArticleFilter,
+        fetchCustomArticles
+      })
 
-    if (!oldestUnpublishedArticle) {
-      if (this.#enableDebug) {
-        console.log('No matching articles found.')
-      }
-
-      return
-    }
+    if (oldestUnpublishedArticle === undefined) return undefined
 
     const llmPollParameters = getLLMPollParameters(
       getPrompt(oldestUnpublishedArticle)
@@ -230,7 +221,17 @@ export class RSSService implements IRSSService {
    * @returns The oldest unpublished article, or undefined if none found.
    * @private
    */
-  async #getOldestUnpublishedArticle(articles: Article[]) {
+  async #getOldestUnpublishedArticle(
+    {
+      customArticleFilter,
+      fetchCustomArticles
+    }: {
+      customArticleFilter: ((article: Article) => boolean) | undefined,
+      fetchCustomArticles: (() => Promise<Article[]>) | undefined
+    }
+  ) {
+    const articles = [...(await fetchArticles(this.#rssFeeds, customArticleFilter)), ...(await fetchCustomArticles?.() ?? [])]
+
     const filteredArticles = articles.sort(
       (a, b) => new Date(a.pubDate).getTime() - new Date(b.pubDate).getTime()
     )
@@ -295,6 +296,10 @@ export class RSSService implements IRSSService {
         oldestUnpublishedArticle = article
         break
       }
+    }
+
+    if (!oldestUnpublishedArticle && this.#enableDebug) {
+        console.log('No matching articles found.')
     }
 
     return oldestUnpublishedArticle
