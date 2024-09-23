@@ -308,6 +308,14 @@ export class RSSService implements IRSSService {
   async #markArticleAsPosted(
     article: PostedArticle
   ): Promise<void> {
+    /* Validate article and remove any extra fields */
+    const postedArticle = validatePostedArticle(article)
+
+    if (!postedArticle) {
+      console.error('Invalid article', article)
+      return
+    }
+
     try {
       const result = await this.#mongoService.insertOne<PostedArticle>(
         POSTED_ARTICLE_COLLECTION_NAME,

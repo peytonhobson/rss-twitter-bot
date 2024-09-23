@@ -1,5 +1,11 @@
 # rss-twitter-bot
 
+## 0.1.16
+
+### Patch Changes
+
+- Limited PostedArticle fields to reduce db content.
+
 ## 0.1.15
 
 ### Patch Changes

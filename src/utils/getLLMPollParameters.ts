@@ -47,7 +47,6 @@ export function getLLMPollParameters(content: string) {
       }
     ],
     sanitize: (data: unknown) => {
-      console.log('Sanitizing data:', data)
       return r.required(
         r.object(data, ({ tweet, options }) => {
           return {

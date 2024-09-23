@@ -17,29 +17,20 @@ export type Article = {
 export function validateArticle(item: unknown): Article | undefined {
   return r.object(
     item,
-    ({
-      pubDate,
-      link,
-      content,
-      contentSnippet,
-      title,
-      twitterHandle,
-      ...rest
-    }) => ({
+    ({ pubDate, link, content, contentSnippet, title, twitterHandle }) => ({
       pubDate: r.required(r.string(pubDate)),
       link: r.required(r.string(link)),
       content: r.required(r.string(content)),
       contentSnippet: r.required(r.string(contentSnippet)),
       title: r.required(r.string(title)),
-      twitterHandle: r.string(twitterHandle),
-      ...rest
+      twitterHandle: r.string(twitterHandle)
     })
   )
 }
 
 const POST_TYPES = ['thread', 'poll', 'tweet'] as const
 
-export type PostedArticle = Article & {
+export type PostedArticle = Omit<Article, 'content' | 'contentSnippet'> & {
   postType: (typeof POST_TYPES)[number]
   createdAt: Date
 }
@@ -47,9 +38,15 @@ export type PostedArticle = Article & {
 export function validatePostedArticle(
   article: unknown
 ): PostedArticle | undefined {
-  return r.object(article, ({ postType, createdAt, ...rest }) => ({
-    ...r.required(validateArticle(rest)),
-    postType: r.required(r.oneOf(postType, POST_TYPES)),
-    createdAt: r.required(r.date(createdAt))
-  }))
+  return r.object(
+    article,
+    ({ postType, createdAt, pubDate, link, title, twitterHandle }) => ({
+      pubDate: r.required(r.string(pubDate)),
+      link: r.required(r.string(link)),
+      title: r.required(r.string(title)),
+      twitterHandle: r.string(twitterHandle),
+      postType: r.required(r.oneOf(postType, POST_TYPES)),
+      createdAt: r.required(r.date(createdAt))
+    })
+  )
 }
