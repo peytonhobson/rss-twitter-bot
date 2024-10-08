@@ -142,11 +142,13 @@ export class RSSService implements IRSSService {
   async postArticlePoll({
     getPrompt,
     customArticleFilter,
-    fetchCustomArticles
+    fetchCustomArticles,
+    client = 'twitter'
   }: {
     getPrompt: (article: Article) => string
     customArticleFilter?: ((article: Article) => boolean) | undefined
     fetchCustomArticles?: () => Promise<Article[]>
+    client?: 'twitter' | 'rettiwt'
   }) {
     await this.#mongoService.connect()
 
@@ -173,7 +175,8 @@ export class RSSService implements IRSSService {
 
     const pollDataWithLinks = {
       ...pollData,
-      tweet: `${pollData.tweet}\n\nRead More: ${oldestUnpublishedArticle.link}\n${oldestUnpublishedArticle.twitterHandle ? `@${oldestUnpublishedArticle.twitterHandle}` : ''}`
+      tweet: `${pollData.tweet}\n\nRead More: ${oldestUnpublishedArticle.link}\n${oldestUnpublishedArticle.twitterHandle ? `@${oldestUnpublishedArticle.twitterHandle}` : ''}`,
+      client
     }
 
     const postedPoll = await this.#twitterService.postPoll(pollDataWithLinks)

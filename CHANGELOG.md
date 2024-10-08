@@ -1,5 +1,11 @@
 # rss-twitter-bot
 
+## 0.2.1
+
+### Patch Changes
+
+- Reintroduced polling with rettiwt.
+
 ## 0.2.0
 
 ### Minor Changes
