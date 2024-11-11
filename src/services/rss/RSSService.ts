@@ -1,4 +1,5 @@
 /* eslint-disable prettier/prettier */
+import { daysToMilliseconds } from '@crossingminds/utils'
 import { OpenAIService } from '../openai/OpenAIService'
 import { TwitterService } from '../twitter/TwitterService'
 import { MongoService } from '../database/MongoService'
@@ -241,15 +242,31 @@ export class RSSService implements IRSSService {
 
     let oldestUnpublishedArticle: Article | undefined = undefined
 
-    const lastPostedArticle = validatePostedArticle(
-      await this.#mongoService.findOne<PostedArticle>(POSTED_ARTICLE_COLLECTION_NAME, {
-        sort: { _id: -1 }
-      })
-    )
+    const lastPostedArticles = 
+      (await this.#mongoService.find<PostedArticle>(POSTED_ARTICLE_COLLECTION_NAME, {
+        createdAt: {
+          $gte: new Date(Date.now() - daysToMilliseconds(1))
+        }
+      }, {
+        sort: { _id: -1 },
+      }))?.map(validatePostedArticle).filter(article => article !== undefined) ?? []
 
-    const lastPostedArticleAuthor = lastPostedArticle
-      ? new URL(lastPostedArticle.link).hostname
+    const lastPostedArticleAuthor = lastPostedArticles?.length > 0 && lastPostedArticles[0]
+      ? new URL(lastPostedArticles[0].link).hostname
       : undefined
+
+    const authorsPostedInLast24Hours = new Set(lastPostedArticles?.map(article => new URL(article.link).hostname))
+
+    for (const article of filteredArticles) {
+      const articleAuthor = new URL(article.link).hostname
+
+      if (authorsPostedInLast24Hours.has(articleAuthor) || articleAuthor === lastPostedArticleAuthor) {
+        continue
+      }
+
+      oldestUnpublishedArticle = article
+      break
+    }
 
     /* Split articles by last posted author and other authors */
     const { articlesByLastPostedAuthor, articlesByOtherAuthors } =
@@ -257,7 +274,9 @@ export class RSSService implements IRSSService {
         (acc, article) => {
           const articleAuthor = new URL(article.link).hostname
 
-          if (lastPostedArticle && articleAuthor === lastPostedArticleAuthor) {
+          /* If the article author is the same as the last posted article author,
+          add it to the list of articles by the last posted author */
+          if (articleAuthor === lastPostedArticleAuthor) {
             return {
               ...acc,
               articlesByLastPostedAuthor: [
@@ -265,6 +284,12 @@ export class RSSService implements IRSSService {
                 article
               ]
             }
+          }
+
+          /* If the article author has posted in the last 24 hours, 
+           skip it */
+          if (authorsPostedInLast24Hours.has(articleAuthor)) {
+            return acc
           }
 
           return {
