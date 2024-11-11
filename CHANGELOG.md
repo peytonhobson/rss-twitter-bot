@@ -1,5 +1,11 @@
 # rss-twitter-bot
 
+## 0.2.2
+
+### Patch Changes
+
+- 30709eb: Created new filter to stop posting article from same author within 24 hours.
+
 ## 0.2.1
 
 ### Patch Changes
