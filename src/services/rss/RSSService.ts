@@ -234,9 +234,9 @@ export class RSSService implements IRSSService {
       fetchCustomArticles: (() => Promise<Article[]>) | undefined
     }
   ) {
-    const articles = [...(await fetchArticles(this.#rssFeeds, customArticleFilter)), ...(await fetchCustomArticles?.() ?? [])]
+    const articles = [...(await fetchArticles(this.#rssFeeds)), ...(await fetchCustomArticles?.() ?? [])]
 
-    const filteredArticles = articles.sort(
+    const filteredArticles = articles.filter(customArticleFilter ?? (() => true)).sort(
       (a, b) => new Date(a.pubDate).getTime() - new Date(b.pubDate).getTime()
     )
 

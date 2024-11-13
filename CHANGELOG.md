@@ -1,5 +1,11 @@
 # rss-twitter-bot
 
+## 0.2.3
+
+### Patch Changes
+
+- Applied custom article filter to custom fetched articles.
+
 ## 0.2.2
 
 ### Patch Changes

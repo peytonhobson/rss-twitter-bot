@@ -11,19 +11,14 @@ const rssParser = new RSSParser()
  * @param customArticleFilter - An optional custom filter function for articles.
  * @returns A promise that resolves to an array of filtered articles.
  */
-export async function fetchArticles(
-  rssFeeds: RSSFeed[],
-  customArticleFilter: ((article: Article) => boolean) | undefined
-) {
+export async function fetchArticles(rssFeeds: RSSFeed[]) {
   return (
     await Promise.all(
       rssFeeds.map(async rssFeed => {
         return await fetchFeed(rssFeed)
       })
     )
-  )
-    .flat()
-    .filter(customArticleFilter ?? (() => true))
+  ).flat()
 }
 
 /**
