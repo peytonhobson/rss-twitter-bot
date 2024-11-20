@@ -218,6 +218,23 @@ export class RSSService implements IRSSService {
     }
   }
 
+  async filterArticles(articles: Article[], customArticleFilter: ((article: Article) => boolean) | undefined) {
+    const filterResults = await Promise.all(
+      articles.map(async (article) => {
+        const isPosted = await this.#isArticlePosted(article.link);
+        const passesCustomFilter = customArticleFilter?.(article) ?? true;
+
+        return !(isPosted) && passesCustomFilter;
+      })
+    );
+
+    const filteredArticles = articles
+      .filter((_, index) => filterResults[index])
+      .sort((a, b) => new Date(a.pubDate).getTime() - new Date(b.pubDate).getTime());
+
+    return filteredArticles;
+  }
+
   /**
    * Retrieves the oldest unpublished article from a list of articles.
    * Prioritizes articles from authors different from the last posted article.
@@ -236,11 +253,7 @@ export class RSSService implements IRSSService {
   ) {
     const articles = [...(await fetchArticles(this.#rssFeeds)), ...(await fetchCustomArticles?.() ?? [])]
 
-    const filteredArticles = articles.filter(customArticleFilter ?? (() => true)).sort(
-      (a, b) => new Date(a.pubDate).getTime() - new Date(b.pubDate).getTime()
-    )
-
-    let oldestUnpublishedArticle: Article | undefined = undefined
+    const filteredArticles = await this.filterArticles(articles, customArticleFilter)
 
     const lastPostedArticles = 
       (await this.#mongoService.find<PostedArticle>(POSTED_ARTICLE_COLLECTION_NAME, {
@@ -251,65 +264,19 @@ export class RSSService implements IRSSService {
         sort: { _id: -1 },
       }))?.map(validatePostedArticle).filter(article => article !== undefined) ?? []
 
-    const lastPostedArticleAuthor = lastPostedArticles?.length > 0 && lastPostedArticles[0]
-      ? new URL(lastPostedArticles[0].link).hostname
-      : undefined
-
     const authorsPostedInLast24Hours = new Set(lastPostedArticles?.map(article => new URL(article.link).hostname))
+
+    let oldestUnpublishedArticle: Article | undefined = undefined
 
     for (const article of filteredArticles) {
       const articleAuthor = new URL(article.link).hostname
 
-      if (authorsPostedInLast24Hours.has(articleAuthor) || articleAuthor === lastPostedArticleAuthor) {
+      if (authorsPostedInLast24Hours.has(articleAuthor)) {
         continue
       }
 
       oldestUnpublishedArticle = article
       break
-    }
-
-    /* Split articles by last posted author and other authors */
-    const { articlesByLastPostedAuthor, articlesByOtherAuthors } =
-      filteredArticles.reduce(
-        (acc, article) => {
-          const articleAuthor = new URL(article.link).hostname
-
-          /* If the article author is the same as the last posted article author,
-          add it to the list of articles by the last posted author */
-          if (articleAuthor === lastPostedArticleAuthor) {
-            return {
-              ...acc,
-              articlesByLastPostedAuthor: [
-                ...acc.articlesByLastPostedAuthor,
-                article
-              ]
-            }
-          }
-
-          /* If the article author has posted in the last 24 hours, 
-           skip it */
-          if (authorsPostedInLast24Hours.has(articleAuthor)) {
-            return acc
-          }
-
-          return {
-            ...acc,
-            articlesByOtherAuthors: [...acc.articlesByOtherAuthors, article]
-          }
-        },
-        { articlesByLastPostedAuthor: [], articlesByOtherAuthors: [] } as {
-          articlesByLastPostedAuthor: Article[]
-          articlesByOtherAuthors: Article[]
-        }
-      )
-
-    /* If the last posted article is from a different author, 
-     prioritize posting articles from other authors */
-    for (const article of articlesByOtherAuthors) {
-      if (!(await this.#isArticlePosted(article.link))) {
-        oldestUnpublishedArticle = article
-        break
-      }
     }
 
     /* If there are valid articles from other authors, 
@@ -318,19 +285,7 @@ export class RSSService implements IRSSService {
       return oldestUnpublishedArticle
     }
 
-    /* Check if there are any unpublished articles from the last posted author */
-    for (const article of articlesByLastPostedAuthor) {
-      if (!(await this.#isArticlePosted(article.link))) {
-        oldestUnpublishedArticle = article
-        break
-      }
-    }
-
-    if (!oldestUnpublishedArticle && this.#enableDebug) {
-        console.log('No matching articles found.')
-    }
-
-    return oldestUnpublishedArticle
+    return filteredArticles[0]
   }
 
   /**
