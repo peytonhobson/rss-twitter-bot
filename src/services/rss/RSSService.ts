@@ -1,10 +1,11 @@
-/* eslint-disable prettier/prettier */
-import { daysToMilliseconds } from '@crossingminds/utils'
+import { daysToMilliseconds, run } from '@crossingminds/utils'
 import { OpenAIService } from '../openai/OpenAIService'
 import { TwitterService } from '../twitter/TwitterService'
 import { MongoService } from '../database/MongoService'
 import { fetchArticles, getLLMPollParameters } from '../../utils'
 import { validatePostedArticle, type PostedArticle } from '../../models/article'
+import { BlueskyService } from '../bluesky/BlueskyService'
+import type { BlueskyServiceParams } from '../bluesky/BlueskyService'
 import type { IRSSService } from './interfaces/IRSSService'
 import type { MongoServiceParams } from '../database/MongoService'
 import type { TwitterServiceParams } from '../twitter/TwitterService'
@@ -18,25 +19,31 @@ export type RSSServiceParams = {
   enableDebug?: boolean
 } & MongoServiceParams &
   TwitterServiceParams &
-  OpenAIServiceParams
+  OpenAIServiceParams &
+  Partial<BlueskyServiceParams>
 
 export class RSSService implements IRSSService {
   readonly #rssFeeds: RSSFeed[]
+  readonly #blueskyService: BlueskyService | undefined
   readonly #twitterService: TwitterService
   readonly #openAIService: OpenAIService
   readonly #mongoService: MongoService
   readonly #enableDebug: boolean
 
   constructor(readonly params: RSSServiceParams) {
-
-    const {
-      rssFeeds,
-      enableDebug = false
-    } = params
+    const { rssFeeds, enableDebug = false } = params
 
     this.#mongoService = new MongoService(params)
     this.#twitterService = new TwitterService(params)
     this.#openAIService = new OpenAIService(params)
+
+    if (params.blueskyIdentifier && params.blueskyPassword) {
+      this.#blueskyService = new BlueskyService({
+        blueskyIdentifier: params.blueskyIdentifier,
+        blueskyPassword: params.blueskyPassword,
+        enableDebug
+      })
+    }
 
     this.#rssFeeds = rssFeeds
     this.#enableDebug = enableDebug
@@ -45,19 +52,20 @@ export class RSSService implements IRSSService {
   async postArticleTweet({
     getPrompt,
     customArticleFilter,
-    fetchCustomArticles
+    fetchCustomArticles,
+    platform = 'twitter'
   }: {
     getPrompt: (article: Article) => string
-    customArticleFilter?: ((article: Article) => boolean) | undefined,
+    customArticleFilter?: ((article: Article) => boolean) | undefined
     fetchCustomArticles?: () => Promise<Article[]>
+    platform?: 'twitter' | 'bluesky'
   }) {
     await this.#mongoService.connect()
 
-    const oldestUnpublishedArticle =
-      await this.#getOldestUnpublishedArticle({
-        customArticleFilter,
-        fetchCustomArticles
-      })
+    const oldestUnpublishedArticle = await this.#getOldestUnpublishedArticle({
+      customArticleFilter,
+      fetchCustomArticles
+    })
 
     if (oldestUnpublishedArticle === undefined) return undefined
 
@@ -67,7 +75,18 @@ export class RSSService implements IRSSService {
       content: tweetContent
     })
 
-    const postedTweet = await this.#twitterService.postTweet(tweet)
+    const postedTweet = await run(async () => {
+      switch (platform) {
+        case 'twitter':
+          return await this.#twitterService.postTweet(tweet)
+        case 'bluesky':
+          if (!this.#blueskyService) {
+            console.error('Provide bluesky credentials to create a post.')
+          }
+
+          return await this.#blueskyService?.createPost(tweet)
+      }
+    })
 
     await this.#markArticleAsPosted({
       ...oldestUnpublishedArticle,
@@ -92,13 +111,12 @@ export class RSSService implements IRSSService {
     customArticleFilter?: ((article: Article) => boolean) | undefined
     fetchCustomArticles?: () => Promise<Article[]>
   }) {
-   await this.#mongoService.connect()
+    await this.#mongoService.connect()
 
-    const oldestUnpublishedArticle =
-      await this.#getOldestUnpublishedArticle({
-        customArticleFilter,
-        fetchCustomArticles
-      })
+    const oldestUnpublishedArticle = await this.#getOldestUnpublishedArticle({
+      customArticleFilter,
+      fetchCustomArticles
+    })
 
     if (oldestUnpublishedArticle === undefined) return undefined
 
@@ -118,10 +136,15 @@ export class RSSService implements IRSSService {
       )
 
     // Check if any tweets contain the article link
-    const tweetContainLink = tweets.some(tweet => tweet.includes(oldestUnpublishedArticle.link))
+    const tweetContainLink = tweets.some(tweet =>
+      tweet.includes(oldestUnpublishedArticle.link)
+    )
 
     if (!tweetContainLink) {
-      tweets = [...tweets, `Read More: ${oldestUnpublishedArticle.link}\n${oldestUnpublishedArticle.twitterHandle ? `@${oldestUnpublishedArticle.twitterHandle}` : ''}`]
+      tweets = [
+        ...tweets,
+        `Read More: ${oldestUnpublishedArticle.link}\n${oldestUnpublishedArticle.twitterHandle ? `@${oldestUnpublishedArticle.twitterHandle}` : ''}`
+      ]
     }
 
     const postedThread = await this.#twitterService.postThread(tweets)
@@ -153,11 +176,10 @@ export class RSSService implements IRSSService {
   }) {
     await this.#mongoService.connect()
 
-    const oldestUnpublishedArticle =
-      await this.#getOldestUnpublishedArticle({
-        customArticleFilter,
-        fetchCustomArticles
-      })
+    const oldestUnpublishedArticle = await this.#getOldestUnpublishedArticle({
+      customArticleFilter,
+      fetchCustomArticles
+    })
 
     if (oldestUnpublishedArticle === undefined) return undefined
 
@@ -225,42 +247,59 @@ export class RSSService implements IRSSService {
    * @returns The oldest unpublished article, or undefined if none found.
    * @private
    */
-  async #getOldestUnpublishedArticle(
-    {
-      customArticleFilter,
-      fetchCustomArticles
-    }: {
-      customArticleFilter: ((article: Article) => boolean) | undefined,
-      fetchCustomArticles: (() => Promise<Article[]>) | undefined
-    }
-  ) {
-    const articles = [...(await fetchArticles(this.#rssFeeds)), ...(await fetchCustomArticles?.() ?? [])]
+  async #getOldestUnpublishedArticle({
+    customArticleFilter,
+    fetchCustomArticles
+  }: {
+    customArticleFilter: ((article: Article) => boolean) | undefined
+    fetchCustomArticles: (() => Promise<Article[]>) | undefined
+  }) {
+    const articles = [
+      ...(await fetchArticles(this.#rssFeeds)),
+      ...((await fetchCustomArticles?.()) ?? [])
+    ]
 
-    const filteredArticles = articles.filter(customArticleFilter ?? (() => true)).sort(
-      (a, b) => new Date(a.pubDate).getTime() - new Date(b.pubDate).getTime()
-    )
+    const filteredArticles = articles
+      .filter(customArticleFilter ?? (() => true))
+      .sort(
+        (a, b) => new Date(a.pubDate).getTime() - new Date(b.pubDate).getTime()
+      )
 
     let oldestUnpublishedArticle: Article | undefined = undefined
 
-    const lastPostedArticles = 
-      (await this.#mongoService.find<PostedArticle>(POSTED_ARTICLE_COLLECTION_NAME, {
-        createdAt: {
-          $gte: new Date(Date.now() - daysToMilliseconds(1))
-        }
-      }, {
-        sort: { _id: -1 },
-      }))?.map(validatePostedArticle).filter(article => article !== undefined) ?? []
+    const lastPostedArticles =
+      (
+        await this.#mongoService.find<PostedArticle>(
+          POSTED_ARTICLE_COLLECTION_NAME,
+          {
+            createdAt: {
+              $gte: new Date(Date.now() - daysToMilliseconds(1))
+            }
+          },
+          {
+            sort: { _id: -1 }
+          }
+        )
+      )
+        ?.map(validatePostedArticle)
+        .filter(article => article !== undefined) ?? []
 
-    const lastPostedArticleAuthor = lastPostedArticles?.length > 0 && lastPostedArticles[0]
-      ? new URL(lastPostedArticles[0].link).hostname
-      : undefined
+    const lastPostedArticleAuthor =
+      lastPostedArticles?.length > 0 && lastPostedArticles[0]
+        ? new URL(lastPostedArticles[0].link).hostname
+        : undefined
 
-    const authorsPostedInLast24Hours = new Set(lastPostedArticles?.map(article => new URL(article.link).hostname))
+    const authorsPostedInLast24Hours = new Set(
+      lastPostedArticles?.map(article => new URL(article.link).hostname)
+    )
 
     for (const article of filteredArticles) {
       const articleAuthor = new URL(article.link).hostname
 
-      if (authorsPostedInLast24Hours.has(articleAuthor) || articleAuthor === lastPostedArticleAuthor) {
+      if (
+        authorsPostedInLast24Hours.has(articleAuthor) ||
+        articleAuthor === lastPostedArticleAuthor
+      ) {
         continue
       }
 
@@ -327,7 +366,7 @@ export class RSSService implements IRSSService {
     }
 
     if (!oldestUnpublishedArticle && this.#enableDebug) {
-        console.log('No matching articles found.')
+      console.log('No matching articles found.')
     }
 
     return oldestUnpublishedArticle
@@ -338,9 +377,7 @@ export class RSSService implements IRSSService {
    * @param article - The article to mark as posted, including the post type.
    * @private
    */
-  async #markArticleAsPosted(
-    article: PostedArticle
-  ): Promise<void> {
+  async #markArticleAsPosted(article: PostedArticle): Promise<void> {
     /* Validate article and remove any extra fields */
     const postedArticle = validatePostedArticle(article)
 
@@ -366,13 +403,19 @@ export class RSSService implements IRSSService {
   async findLatestPostedArticles(limit: number): Promise<PostedArticle[]> {
     await this.#mongoService.connect()
 
-    const articles = await this.#mongoService.find<Article>(POSTED_ARTICLE_COLLECTION_NAME, 
-      undefined, 
-    {
-      limit,
-      sort: { _id: -1 }
-    })
+    const articles = await this.#mongoService.find<Article>(
+      POSTED_ARTICLE_COLLECTION_NAME,
+      undefined,
+      {
+        limit,
+        sort: { _id: -1 }
+      }
+    )
 
-    return articles?.map(validatePostedArticle).filter(article => article !== undefined) ?? []
+    return (
+      articles
+        ?.map(validatePostedArticle)
+        .filter(article => article !== undefined) ?? []
+    )
   }
 }
