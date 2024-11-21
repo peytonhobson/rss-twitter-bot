@@ -1,20 +1,20 @@
 import type { TweetV2PostTweetResult } from 'twitter-api-v2'
 
 /**
- * Interface for Twitter service operations
+ * Interface for Bluesky service operations
  */
-export interface ITwitterService {
+export interface IBlueskyService {
   /**
-   * Posts a single tweet
-   * @param tweet - The content of the tweet
+   * Posts a single post
+   * @param text - The content of the post
    */
-  postTweet(tweet: string): Promise<string | undefined>
+  createPost(text: string): Promise<string | undefined>
 
   /**
    * Posts a thread of tweets
    * @param tweets - An array of tweet contents
    */
-  postThread(tweets: string[]): Promise<TweetV2PostTweetResult[] | undefined>
+  createThread(tweets: string[]): Promise<TweetV2PostTweetResult[] | undefined>
 
   /**
    * Posts a poll tweet
@@ -22,7 +22,7 @@ export interface ITwitterService {
    * @param pollData.content - Additional content for the tweet
    * @param pollData.options - The poll options (2-4 options)
    */
-  postPoll(pollData: {
+  createPoll(pollData: {
     tweet: string
     options: string[]
   }): Promise<unknown | undefined>

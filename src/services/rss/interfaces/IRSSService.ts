@@ -17,10 +17,11 @@ export interface IRSSService {
     getPrompt: (article: Article) => string
     customArticleFilter?: (article: Article) => boolean
     fetchCustomArticles?: () => Promise<Article[]>
+    platform?: 'twitter' | 'bluesky'
   }): Promise<
     | {
         article: Article
-        tweet: TweetV2PostTweetResult | undefined
+        tweet: string | undefined
       }
     | undefined
   >

@@ -41,7 +41,7 @@ export class TwitterService implements ITwitterService {
         console.log('Posted tweet:', tweetMessage)
       }
 
-      return postedTweet
+      return postedTweet.data.text
     } catch (error) {
       console.error('Error posting tweet:', error)
 

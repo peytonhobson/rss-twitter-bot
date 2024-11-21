@@ -1,5 +1,11 @@
 # rss-twitter-bot
 
+## 0.3.0
+
+### Minor Changes
+
+- Created BlueskyService for creating posts on bluesky platform.
+
 ## 0.2.4
 
 ### Patch Changes

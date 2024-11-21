@@ -6,6 +6,9 @@
         "IRSS",
         "twid",
         "unimported",
-        "openai"
+        "openai",
+        "bluesky",
+        "bsky",
+        "atproto"
     ]
 }
