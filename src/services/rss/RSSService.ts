@@ -2,7 +2,11 @@ import { daysToMilliseconds, run } from '@crossingminds/utils'
 import { OpenAIService } from '../openai/OpenAIService'
 import { TwitterService } from '../twitter/TwitterService'
 import { MongoService } from '../database/MongoService'
-import { fetchArticles, getLLMPollParameters } from '../../utils'
+import {
+  fetchArticles,
+  getBlueskyPostParameters,
+  getLLMPollParameters
+} from '../../utils'
 import { validatePostedArticle, type PostedArticle } from '../../models/article'
 import { BlueskyService } from '../bluesky/BlueskyService'
 import type { BlueskyServiceParams } from '../bluesky/BlueskyService'
@@ -13,6 +17,8 @@ import type { OpenAIServiceParams } from '../openai/OpenAIService'
 import type { RSSFeed, Article } from '../../models'
 
 const POSTED_ARTICLE_COLLECTION_NAME = 'posted-articles'
+
+type Platform = 'twitter' | 'bluesky'
 
 export type RSSServiceParams = {
   rssFeeds: RSSFeed[]
@@ -55,10 +61,10 @@ export class RSSService implements IRSSService {
     fetchCustomArticles,
     platform = 'twitter'
   }: {
-    getPrompt: (article: Article) => string
+    getPrompt: (article: Article, platform: Platform) => string
     customArticleFilter?: ((article: Article) => boolean) | undefined
     fetchCustomArticles?: () => Promise<Article[]>
-    platform?: 'twitter' | 'bluesky'
+    platform?: Platform
   }) {
     await this.#mongoService.connect()
 
@@ -69,22 +75,38 @@ export class RSSService implements IRSSService {
 
     if (oldestUnpublishedArticle === undefined) return undefined
 
-    const tweetContent = getPrompt(oldestUnpublishedArticle)
-
-    const tweet = await this.#openAIService.generateChatCompletion({
-      content: tweetContent
-    })
+    const tweetContent = getPrompt(oldestUnpublishedArticle, platform)
 
     const postedTweet = await run(async () => {
       switch (platform) {
         case 'twitter':
-          return await this.#twitterService.postTweet(tweet)
+          return await run(async () => {
+            const tweet = await this.#openAIService.generateChatCompletion({
+              content: tweetContent
+            })
+
+            return await this.#twitterService.postTweet(tweet)
+          })
+
         case 'bluesky':
           if (!this.#blueskyService) {
             console.error('Provide bluesky credentials to create a post.')
+
+            return undefined
           }
 
-          return await this.#blueskyService?.createPost(tweet)
+          return await run(async () => {
+            const postParameters = getBlueskyPostParameters(tweetContent)
+
+            const postData =
+              await this.#openAIService.getStructuredOutput(postParameters)
+
+            if (!postData) {
+              return undefined
+            }
+
+            return await this.#blueskyService?.createPost(postData)
+          })
       }
     })
 
