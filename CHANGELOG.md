@@ -1,5 +1,11 @@
 # rss-twitter-bot
 
+## 0.3.1
+
+### Patch Changes
+
+- Allow multiple platforms per function call.
+
 ## 0.3.0
 
 ### Minor Changes

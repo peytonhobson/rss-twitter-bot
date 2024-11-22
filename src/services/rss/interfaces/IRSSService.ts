@@ -1,3 +1,4 @@
+import type { Platform } from '../RSSService'
 import type { TweetV2PostTweetResult } from 'twitter-api-v2'
 import type { Article } from '../../../models'
 import type { PostedArticle } from '../../../models/article'
@@ -17,7 +18,7 @@ export interface IRSSService {
     getPrompt: (article: Article) => string
     customArticleFilter?: (article: Article) => boolean
     fetchCustomArticles?: () => Promise<Article[]>
-    platform?: 'twitter' | 'bluesky'
+    platforms: [Platform, ...Platform[]]
   }): Promise<
     | {
         article: Article

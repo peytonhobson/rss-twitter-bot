@@ -49,7 +49,7 @@ export class BlueskyService implements IBlueskyService {
       const newText = text
         .replace('Read More: ', 'Read More')
         .replace(
-          /https?:\/\/(www\.)?[a-zA-Z0-9-]+(\.[a-zA-Z]{2,})+([/a-zA-Z0-9-._~:?#[\]@!$&'()*+,;=]*)?/g,
+          /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/g,
           ''
         )
 
@@ -85,7 +85,7 @@ export class BlueskyService implements IBlueskyService {
 
       const postRecord = {
         $type: 'app.bsky.feed.post',
-        text: rt.text.slice(0, 299),
+        text: sliceTextSentence(rt.text, 299),
         ...(rt.facets && { facets: rt.facets }),
         createdAt: new Date().toISOString(),
         ...(thumbnail && {
@@ -191,4 +191,27 @@ function findReadMoreBytePositions(text: string) {
 
   // Return null if "Read More" is not found
   return undefined
+}
+
+function sliceTextSentence(text: string, maxLength: number = 300): string {
+  if (text.length <= maxLength) {
+    return text
+  }
+
+  // Slice the text to the maximum length
+  let slicedText = text.slice(0, maxLength)
+
+  // Find the last period, exclamation mark, or question mark within the sliced text
+  const lastSentenceEnd = Math.max(
+    slicedText.lastIndexOf('.'),
+    slicedText.lastIndexOf('!'),
+    slicedText.lastIndexOf('?')
+  )
+
+  // If a sentence-ending punctuation is found within the sliced text, trim to that point
+  if (lastSentenceEnd !== -1) {
+    slicedText = slicedText.slice(0, lastSentenceEnd + 1)
+  }
+
+  return slicedText
 }

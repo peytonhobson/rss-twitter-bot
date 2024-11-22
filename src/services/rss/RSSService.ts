@@ -18,7 +18,9 @@ import type { RSSFeed, Article } from '../../models'
 
 const POSTED_ARTICLE_COLLECTION_NAME = 'posted-articles'
 
-type Platform = 'twitter' | 'bluesky'
+const Platforms = ['twitter', 'bluesky'] as const
+
+export type Platform = (typeof Platforms)[number]
 
 export type RSSServiceParams = {
   rssFeeds: RSSFeed[]
@@ -56,15 +58,15 @@ export class RSSService implements IRSSService {
   }
 
   async postArticleTweet({
-    getPrompt,
     customArticleFilter,
     fetchCustomArticles,
-    platform = 'twitter'
+    getPrompt,
+    platforms = ['twitter']
   }: {
-    getPrompt: (article: Article, platform: Platform) => string
     customArticleFilter?: ((article: Article) => boolean) | undefined
     fetchCustomArticles?: () => Promise<Article[]>
-    platform?: Platform
+    getPrompt: (article: Article, platform: Platform) => string
+    platforms: [Platform, ...Platform[]]
   }) {
     await this.#mongoService.connect()
 
@@ -75,40 +77,48 @@ export class RSSService implements IRSSService {
 
     if (oldestUnpublishedArticle === undefined) return undefined
 
-    const tweetContent = getPrompt(oldestUnpublishedArticle, platform)
+    const posts = await Promise.all(
+      platforms.map(async platform => {
+        const content = getPrompt(oldestUnpublishedArticle, platform)
 
-    const postedTweet = await run(async () => {
-      switch (platform) {
-        case 'twitter':
-          return await run(async () => {
-            const tweet = await this.#openAIService.generateChatCompletion({
-              content: tweetContent
+        switch (platform) {
+          case 'twitter':
+            return await run(async () => {
+              const tweet = await this.#openAIService.generateChatCompletion({
+                content
+              })
+
+              return {
+                post: await this.#twitterService.postTweet(tweet),
+                type: 'tweet' as const
+              }
             })
 
-            return await this.#twitterService.postTweet(tweet)
-          })
+          case 'bluesky':
+            if (!this.#blueskyService) {
+              console.error('Provide bluesky credentials to create a post.')
 
-        case 'bluesky':
-          if (!this.#blueskyService) {
-            console.error('Provide bluesky credentials to create a post.')
-
-            return undefined
-          }
-
-          return await run(async () => {
-            const postParameters = getBlueskyPostParameters(tweetContent)
-
-            const postData =
-              await this.#openAIService.getStructuredOutput(postParameters)
-
-            if (!postData) {
               return undefined
             }
 
-            return await this.#blueskyService?.createPost(postData)
-          })
-      }
-    })
+            return await run(async () => {
+              const postParameters = getBlueskyPostParameters(content)
+
+              const postData =
+                await this.#openAIService.getStructuredOutput(postParameters)
+
+              if (!postData) {
+                return undefined
+              }
+
+              return {
+                post: await this.#blueskyService?.createPost(postData),
+                type: 'blueskyPost' as const
+              }
+            })
+        }
+      })
+    )
 
     await this.#markArticleAsPosted({
       ...oldestUnpublishedArticle,
@@ -120,7 +130,8 @@ export class RSSService implements IRSSService {
 
     return {
       article: oldestUnpublishedArticle,
-      tweet: postedTweet
+      tweet: posts.find(post => post?.type === 'tweet')?.post,
+      blueskyPost: posts.find(post => post?.type === 'blueskyPost')?.post
     }
   }
 
