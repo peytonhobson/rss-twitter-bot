@@ -1,5 +1,11 @@
 # rss-twitter-bot
 
+## 0.3.2
+
+### Patch Changes
+
+- Return string from tweet
+
 ## 0.3.1
 
 ### Patch Changes
